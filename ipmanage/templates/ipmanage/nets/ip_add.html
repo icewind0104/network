@@ -1,0 +1,11 @@
+{% extends "ipmanage/base.html" %}
+
+{% block body %}
+<div>
+<a href="/net/{{net.id}}/deal_ip_add">OK</a><a href="/net/{{net.id}}/detail">cancel</a>
+描述：{{net.desc}}<br>
+掩码：{{net.mask}}<br>
+网关：{{net.gateway}}<br>
+可用IP：{{ IPs }}
+</div>
+{% endblock %}

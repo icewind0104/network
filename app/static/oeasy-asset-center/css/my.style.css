@@ -1,0 +1,97 @@
+a.success {
+    color : #8CC14C;
+}
+
+a:hover.success {
+    color : #7c9b43;
+}
+
+a.warnning {
+    color : #faa732;
+}
+
+a:hover.warnning {
+    color : #d7902c;
+}
+
+a.danger {
+    color : #e92e4b;
+}
+
+a:hover.danger {
+    color : #b4394c;
+}
+
+tr#used{
+    background: #fffdec;
+}
+tr:hover#used{
+    background: #fff9c2;
+}
+tr:nth-of-type(2n+1)#used{
+    background: #fffcdf;
+}
+tr:nth-of-type(2n+1):hover#used{
+    background: #fff9c2;
+}
+
+.mybutton {
+    margin-left: 10px;
+}
+
+td span{
+    color: #5e9bd7;
+    font-weight: bold;
+}
+
+.unselect{
+    margin-left: -4px;
+    margin-bottom: 4px;
+    margin-right: 4px;
+    box-shadow: 4px 4px 5px #eee;
+}
+
+.unselect:hover{
+    margin-left: 0px;
+    margin-bottom: 0px;
+    margin-right: 0px;
+    box-shadow: 0px 0px 0px #eee;
+}
+
+.logout-box {
+    margin-left: -4px;
+    margin-bottom: 4px;
+    margin-right: 4px;
+    padding: 5px;
+    border: 1px dashed #ddd;
+    background-color: #00a5e6;
+    box-shadow: 4px 4px 5px #bbb;
+}
+
+.logout-box:hover {
+    margin-left: 0px;
+    margin-bottom: 0px;
+    margin-right: 0px;
+    box-shadow: 0px 0px 0px #eee;
+    padding: 5px;
+    border: 1px dashed #bbb;
+    background-color: #00a5e6;
+}
+
+.logout-box dd{
+    color: #fff;
+    font-weight: 900;
+}
+
+.logout-box dd a{
+    color: #fff;
+    font-weight: 500;
+}
+
+.motion{
+    color: #07d;
+}
+
+a.button:hover{
+    text-decoration: none;
+}

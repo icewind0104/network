@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block head %}
+</script>
+{% endblock %}
+
+{% block right %}
+    <div class="uk-width-3-4">
+        <!-- search box -->
+        <div class="uk-container" style="padding:0px;">
+            <div class="uk-flex-right uk-grid">
+                <div class="uk-width-1-2"></div>
+                <div class="uk-text-right uk-width-1-2">
+                <form class="uk-form" method="POST" action="{{prefix}}/">
+                    <fieldset data-uk-margin>
+                        <div class="uk-form-icon"><i class="uk-icon-search"></i>
+                        <input placeholder="search..." autocomplete="off" type="text" name="search" value="{% if search_key %}{{search_key}}{% endif %}">
+                        <button class="uk-button mybutton">搜索</button></div>
+                    </fieldset>
+                </from>
+                </div>
+            </div>
+        </div>
+
+        <!-- table list -->
+        <div class="uk-overflow-container">
+            <table class="uk-table uk-text-nowrap uk-table-hover uk-table-striped">
+                <thead>
+                    <tr style="background-image:linear-gradient(to bottom,#fff,#eee);">
+                        <th class="uk-width-1-5">IP地址</th>
+                        <th class="uk-width-1-5">使用人</th>
+                        <th class="uk-width-1-5">设备mac</th>
+                        <th class="uk-width-1-5">设备信息</th>
+                        <th class="uk-width-1-5">部门</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for IP in IPs %}
+                    <tr class="uk-visible-hover-inline" id="{% if IP.user %}used{% endif %}">
+                        <td id="addr" class="uk-width-1-5">{% if IP.addr_str %}{{ IP.addr_str|safe }}{% else %}{{ IP.addr_ntop }}{% endif %}</td>
+                        <td id="user" class="uk-width-1-5">{% if IP.user %}{{ IP.user|safe }}{% endif %}</td>
+                        <td id="mac" class="uk-width-1-5">{% if IP.mac %}{{ IP.mac|safe }}{% endif %}</td>
+                        <td id="device" class="uk-width-1-5">{% if IP.device %}{{ IP.device|safe }}{% endif %}</td>
+                        <td id="department" class="uk-width-1-5">{{ IP.owner.name }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% if not IPs %}
+            <div class="uk-alert uk-alert-warning">
+                {% if IP_count %}未找到相关内容 ....{% else %}点击左侧网络选项或使用搜索功能查找信息{%endif%}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- pagination -->
+        {% if 0 %}
+        <ul class="uk-pagination uk-panel uk-panel-box" style="padding:15px;">
+            <li><a href="{% if last_get %}{{ last_get }}{% endif %}&page=0">1</a></li>
+
+            {% if IPs.has_previous %}
+                <li><a href="{% if last_get %}{{ last_get }}{% endif %}&page={{ IPs.previous_page_number }}"><span><<</span></a></li>
+            {% else %}
+                <li class="uk-disabled"><span><<</span></li>
+            {% endif %}
+
+            {% for p in page_range %}
+                {% if p == "..." %}<li><span>{{p}}</span></li>
+                {% else %}
+                    {% if p == IPs.number %}
+                        <li class="uk-active"><span>{{p}}</span></li>
+                    {% else %}
+                        <li><a href="{% if last_get %}{{ last_get }}{% endif %}&page={{ p }}">{{p}}</a></li>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            {% if IPs.has_next %}
+                <li><a href="{% if last_get %}{{ last_get }}{% endif %}&page={{ IPs.next_page_number }}"><span>>></span></a></li>
+            {% else %}
+                <li class="uk-disabled"><span></span></li>
+            {% endif %}
+            <li><a href="{% if last_get %}{{ last_get }}{% endif %}&page={{ IPs.paginator.num_pages }}">{% if IPs.paginator.num_pages %}{{ IPs.paginator.num_pages }}{% else %}1{% endif %}</a></li>
+        </ul>
+        {% endif %}
+
+    </div>
+
+{% endblock %}

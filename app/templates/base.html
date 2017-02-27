@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">  
+<html xmlns="http://www.w3.org/1999/xhtml">  
+    <head>  
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link rel="stylesheet" href="/oeasy-asset-center/css/uikit.min.css">
+        <link rel="stylesheet" href="/oeasy-asset-center/css/uikit.gradient.min.css">
+        <link rel="stylesheet" href="/oeasy-asset-center/css/components/sticky.css">
+        <link rel="stylesheet" href="/oeasy-asset-center/css/components/progress.css">
+        <link rel="stylesheet" href="/oeasy-asset-center/css/my.style.css">
+        <script src="/oeasy-asset-center/js/jquery.js"></script>
+        <script src="/oeasy-asset-center/js/uikit.min.js"></script>
+        <script src="/oeasy-asset-center/js/components/sticky.js"></script>
+        {% block head %}
+        {% endblock %}
+
+    </head>
+
+    <body>
+    {% block body %}
+        <div class="uk-container uk-container-center uk-margin-top uk-margin-large-bottom">
+
+        <!-- error display -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+            <div class="uk-container-center uk-text-center uk-alert uk-alert-danger uk-width-1-2" data-uk-alert>
+                <a href="" class="uk-close uk-alert-close"></a>
+                错误<span class="uk-margin-left">{{ message }}</span>
+            </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+            <div class="uk-grid" style="min-width:1000px;">
+                <!-- left net box -->
+                <div class="uk-width-1-5">
+                    <!-- account bar -->
+                    <div class="logout-box uk-panel uk-text-center uk-panel-box uk-margin-top" style="border:1px dashed #bbb;">
+                        <dl class="uk-description-list-line">
+                            <!--<dt>Description</dt>-->
+                            <dd id="netdesc">Hi!&nbsp;{{ current_user.username }}
+                                <span class="uk-margin-left">|</span><a href="{{prefix}}/logout/" class="uk-margin-left">登出</a>
+                            </dd>
+                        </dl>
+                    </div>
+                    <hr class="uk-grid-divider"></hr>
+                {% block left %}
+                    <div class="uk-panel uk-panel-box">
+                        <h3 class="uk-panel-title">部门/项目组</h3>
+                    {% if current_user and current_user.catagory == 'administrator' %}
+                        <ul class="uk-nav uk-nav-side uk-nav-parent-icon">
+                        <li>
+                            <a href="{{prefix}}/net/">
+                                <i class="uk-icon-gear"></i>&nbsp设置
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#netaddbox" data-uk-modal>
+                                <i class="uk-icon-plus-square"></i>&nbsp新增网段
+                            </a>
+                        </li>
+                        <li class="uk-nav-divider"></li>
+                    {% endif %}
+                {% for i in nets %}
+                            <li class="{% if currNetId == i.id %}uk-active{% endif %}">
+                                <a  href="{{prefix}}/admin/?net={{ i.id }}">{{ i.name }}</a>
+                            </li>
+                {% endfor %}
+                        </ul>
+                    </div>
+                {% endblock %}
+                </div>
+        <!-- right area -->
+        {% block right %}
+        {% endblock %}
+            </div>
+        </div>
+    {% endblock %}
+    </body>
+</html>
+
+{% if current_user and current_user.catagory == 'administrator' %}
+<!-- 弹窗 -->
+<form action="{{prefix}}/net/add/" class="uk-form uk-form-horizontal" method="POST">
+    {{ form.hidden_tag() }}
+
+    <div id="netaddbox" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-plus uk-icon-medium" style="color:#8CC14C;"></i><h2>添加新网络</h2></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">网络名称<span style="color:#07d;">（必填）</sp
+an></label><div class="uk-form-controls">
+                <!--<input id="netmodifyname" type="text" autocomplete="off" name="name">-->
+                {{ form.name }}
+            </div></div>
+            <!--<div class="uk-form-row"><label class="uk-form-label">附加描述</label><div class="uk-form-contro
+                ls"><textarea id="netmodifydesc" type="text" autocomplete="off" name="desc"></textarea></div></div>-->
+
+            <div class="uk-form-row"><label class="uk-form-label">起始IP地址</label><div class="uk-form-controls
+">
+                <!--<input id="netmodifyname" type="text" autocomplete="off" name="ipstart">-->
+                {{ form.ipstart }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">结束IP地址</label><div class="uk-form-controls
+">
+                <!--<input id="netmodifyname" type="text" autocomplete="off" name="ipend">-->
+                {{ form.ipend }}
+            </div></div>
+
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-primary" type="submit">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+{% endif %}

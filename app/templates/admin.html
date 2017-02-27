@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script type="text/javascript">
+    $('document').ready(function(){
+        //alert('hello world!')
+        $("a.success").click(
+            function(){
+                $("#usebox #addr").val($(this).attr('id'));
+                $("form#ipAdd").attr("action", "{{prefix}}/ip/add/");
+            });
+
+        $("a.modify").click(
+            function(){
+                //$("#modifybox #addr").val($(this).attr('id'));
+                $("#modifybox #user").val($(this).parent().parent().parent().find('td#user').text());
+                $("#modifybox #mac").val($(this).parent().parent().parent().find('td#mac').text());
+                $("#modifybox #device").val($(this).parent().parent().parent().find('td#device').text());
+                $("form#ipUpdate").attr("action", "{{prefix}}/ip/"+$(this).attr('id')+"/update/");
+            });
+
+        $("a.danger").click(
+            function(){
+                $("#deletebox").find(".motion").text(
+                    $(this).parent().parent().parent().find("#user").text()+$(this).parent().parent().parent().find("#addr").text()
+                );
+                $("form#ipDelete").attr("action", "{{prefix}}/ip/"+$(this).attr('id')+"/delete/");
+            });
+
+    });
+</script>
+{% endblock %}
+
+{% block right %}
+    <div class="uk-width-3-4">
+        <!-- search box -->
+        <div class="uk-container" style="padding:0px;">
+            <div class="uk-flex-right uk-grid">
+                <div class="uk-width-1-2"></div>
+                <div class="uk-text-right uk-width-1-2">
+                <form class="uk-form" method="POST" action="{{prefix}}/admin/">
+                    <fieldset data-uk-margin>
+                        <div class="uk-form-icon"><i class="uk-icon-search"></i>
+                        <input placeholder="search..." autocomplete="off" type="text" name="search" value="{% if search_key %}{{search_key}}{% endif %}">
+                        <button class="uk-button mybutton">搜索</button></div>
+                    </fieldset>
+                </from>
+                </div>
+            </div>
+        </div>
+
+        <!-- table list -->
+        <div class="uk-overflow-container">
+            <table class="uk-table uk-text-nowrap uk-table-hover uk-table-striped">
+                <thead>
+                    <tr style="background-image:linear-gradient(to bottom,#fff,#eee);">
+                        <th class="uk-width-1-6">IP地址</th>
+                        <th class="uk-width-1-6">使用人</th>
+                        <th class="uk-width-1-6">设备mac</th>
+                        <th class="uk-width-1-6">设备信息</th>
+                        <th class="uk-width-1-6">部门</th>
+                        <th class="uk-width-1-6">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for IP in IPs %}
+                    <tr class="uk-visible-hover-inline" id="{% if IP.user %}used{% endif %}">
+                        <td id="addr" class="uk-width-1-6">{% if IP.addr_str %}{{ IP.addr_str|safe }}{% else %}{{ IP.addr_ntop }}{% endif %}</td>
+                        <td id="user" class="uk-width-1-6">{% if IP.user %}{{ IP.user|safe }}{% endif %}</td>
+                        <td id="mac" class="uk-width-1-6">{% if IP.mac %}{{ IP.mac|safe }}{% endif %}</td>
+                        <td id="device" class="uk-width-1-6">{% if IP.device %}{{ IP.device|safe }}{% endif %}</td>
+                        <td id="department" class="uk-width-1-6">{{ IP.owner.name }}</td>
+                        <td  class="uk-width-1-6">
+                            <div>
+                                {% if not IP.user %}<a id="{{IP.addr}}" class="success" href="#usebox" data-uk-modal><i class="uk-icon-user-plus"></i></a>{% endif %}
+                                {% if IP.user %}<a id="{{IP.id}}" class="modify" href="#modifybox" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>{% endif %}
+                                {% if IP.user %}<a id="{{IP.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-user-times"></i></a>{% endif %}
+                                <!--<a id="{{IP.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-times-circle"></i></a>-->
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% if not IPs %}
+            <div class="uk-alert uk-alert-warning">
+                {% if IP_count %}未找到相关内容 ....{% else %}点击左侧网络或使用搜索查找信息{%endif%}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- pagination -->
+        {% if 0 %}
+        <ul class="uk-pagination uk-panel uk-panel-box" style="padding:15px;">
+            <li><a href="{% if last_get %}{{ last_get }}{% endif %}&page=0">1</a></li>
+
+            {% if IPs.has_previous %}
+                <li><a href="{% if last_get %}{{ last_get }}{% endif %}&page={{ IPs.previous_page_number }}"><span><<</span></a></li>
+            {% else %}
+                <li class="uk-disabled"><span><<</span></li>
+            {% endif %}
+
+            {% for p in page_range %}
+                {% if p == "..." %}<li><span>{{p}}</span></li>
+                {% else %}
+                    {% if p == IPs.number %}
+                        <li class="uk-active"><span>{{p}}</span></li>
+                    {% else %}
+                        <li><a href="{% if last_get %}{{ last_get }}{% endif %}&page={{ p }}">{{p}}</a></li>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            {% if IPs.has_next %}
+                <li><a href="{% if last_get %}{{ last_get }}{% endif %}&page={{ IPs.next_page_number }}"><span>>></span></a></li>
+            {% else %}
+                <li class="uk-disabled"><span></span></li>
+            {% endif %}
+            <li><a href="{% if last_get %}{{ last_get }}{% endif %}&page={{ IPs.paginator.num_pages }}">{% if IPs.paginator.num_pages %}{{ IPs.paginator.num_pages }}{% else %}1{% endif %}</a></li>
+        </ul>
+        {% endif %}
+
+    </div>
+
+<!-- IP 操作 -->
+<form>
+</form>
+<form action="" id="ipAdd" class="uk-form uk-form-horizontal" method="POST">
+    {{ form_ip.hidden_tag() }}
+    <div id="usebox" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-user-plus uk-icon-medium" style="color:#8CC14C;"></i><h2>启用该IP地址</h2></div>
+            {{ form_ip.addr }}
+            {{ form_ip.net }}
+            <div class="uk-form-row"><label class="uk-form-label">使用人</label><div class="uk-form-controls">
+                {{ form_ip.user }}
+            </div></div>
+            <div class="uk-form-row"><label class="uk-form-label">设备mac</label><div class="uk-form-controls">
+                {{ form_ip.mac }}
+            </div></div>
+            <div class="uk-form-row"><label class="uk-form-label">设备信息</label><div class="uk-form-controls">
+                {{ form_ip.device }}
+            </div></div>
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-primary">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+<form action="" id="ipUpdate" class="uk-form uk-form-horizontal" method="POST">
+    {{ form_ip.hidden_tag() }}
+    <div id="modifybox" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-pencil-square-o uk-icon-medium" style="color:#07d;"></i><h2>修改使用人</h2></div>
+            <div class="uk-form-row"><label class="uk-form-label">使用人</label><div class="uk-form-controls">
+                {{ form_ip.user }}
+            </div></div>
+            <div class="uk-form-row"><label class="uk-form-label">设备mac</label><div class="uk-form-controls">
+                {{ form_ip.mac }}
+            </div></div>
+            <div class="uk-form-row"><label class="uk-form-label">设备信息</label><div class="uk-form-controls">
+                {{ form_ip.device }}
+            </div></div>
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-primary">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+<form action="" id="ipDelete" class="uk-form" method="POST">
+    <div id="deletebox" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-times-circle uk-icon-medium" style="color:#f00;"></i><h2>删除IP地址</h2></div>
+            确定停用&nbsp;<span class="motion"></span>&nbsp;吗？
+            <input type="text" class="uk-hidden" name="ip_id" id="delete_ip_id">
+            <input type="text" class="uk-hidden" name="operate" value="delete">
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-danger">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- 网络操作 -->
+<form action="" id="netModifyBox" class="uk-form uk-form-horizontal" method="POST">
+    {{ form.hidden_tag() }}
+    <div id="netmodifybox" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-pencil-square-o uk-icon-medium" style="color:#07d;"></i><h2>修改网络</h2></div>
+            <div class="uk-form-row"><label class="uk-form-label">网络名称<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                <!--<input id="netmodifyname" type="text" autocomplete="off" id="modifyinput" name="name">-->
+                {{ form.name }}
+            </div></div>
+            <!--<div class="uk-form-row"><label class="uk-form-label">附加描述</label><div class="uk-form-controls"><textarea id="netmodifydesc" type="text" autocomplete="off" id="modifyinput" name="desc"></textarea></div></div>-->
+
+            <div class="uk-form-row"><label class="uk-form-label">起始IP地址</label><div class="uk-form-controls">
+                <!--<input id="netmodifyname" type="text" autocomplete="off" name="ipstart">-->
+                {{ form.ipstart }}
+            </div></div>
+
+
+            <div class="uk-form-row"><label class="uk-form-label">结束IP地址</label><div class="uk-form-controls">
+                <!--<input id="netmodifyname" type="text" autocomplete="off" name="ipend">-->
+                {{ form.ipend }}
+            </div></div>
+
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-primary">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<form action="" id="netDeleteBox" class="uk-form" method="POST">
+    <div id="netdeletebox" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-times-circle uk-icon-medium" style="color:#f00;"></i><h2>删除网络</h2></div>
+            确定需要删除网络&nbsp;<span class="motion"></span>&nbsp;吗？
+            <div style="margin-top:10px;color:#f00"><i class="uk-icon-exclamation-triangle"></i>&nbsp;警告&nbsp;该操作将会删除此网络下的所有数据，包括IP地址信息。</div>
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-danger">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% endblock %}

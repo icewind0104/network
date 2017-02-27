@@ -1,0 +1,12 @@
+<html>
+<head></head>
+<body>
+	<form action="/test/deal" method="POST">
+	{{ form.hidden_tag() }}
+		network name: {{ form.name }}<br>
+		network start ip: {{ form.ipstart }}<br>
+		network end ip: {{ form.ipend }}<br>
+		<input type="submit" value="ok"/>
+	</form>
+</body>
+</html>

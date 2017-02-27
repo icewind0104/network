@@ -1,0 +1,6 @@
+这是一个小清新的IP地址管理APP
+作者：梅冬临
+
+启动方法
+    1. 开启数据库服务器，centos 6.5
+    2. 执行 python3 /home/meidl/django/mysite/manage.py runserver <ip>:<port> 启动服务

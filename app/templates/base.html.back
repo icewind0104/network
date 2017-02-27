@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">  
+<html xmlns="http://www.w3.org/1999/xhtml">  
+    <head>  
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link rel="stylesheet" href="/oeasy-asset-center/css/uikit.min.css">
+        <link rel="stylesheet" href="/oeasy-asset-center/css/uikit.gradient.min.css">
+        <link rel="stylesheet" href="/oeasy-asset-center/css/components/sticky.css">
+        <link rel="stylesheet" href="/oeasy-asset-center/css/components/progress.css">
+        <link rel="stylesheet" href="/oeasy-asset-center/css/my.style.css">
+        <script src="/oeasy-asset-center/js/jquery.js"></script>
+        <script src="/oeasy-asset-center/js/uikit.min.js"></script>
+        <script src="/oeasy-asset-center/js/components/sticky.js"></script>
+        {% block head %}
+        {% endblock %}
+
+    </head>
+
+    <body>
+    {% block body %}
+        <!-- navigator -->
+        <nav class="uk-navbar" data-uk-sticky>
+            <ul class="uk-navbar-nav">
+                <a href="" class="uk-navbar-brand">首页</a>
+                <li>IP地址查询</li>
+                <li>资产管理</li>
+            </ul>
+        </nav>
+
+        <div class="uk-container uk-container-center uk-margin-top uk-margin-large-bottom">
+
+        <!-- error display -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+            <div class="uk-container-center uk-text-center uk-alert uk-alert-danger uk-width-1-2" data-uk-alert>
+                <a href="" class="uk-close uk-alert-close"></a>
+                错误<span class="uk-margin-left">{{ message }}</span>
+            </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+            <div class="uk-grid" style="min-width:1000px;">
+                <!-- left net box -->
+                <div class="uk-width-1-5">
+                {% block left %}
+                    <div class="uk-panel uk-panel-box">
+                        <h3 class="uk-panel-title">部门/项目组</h3>
+                        <ul class="uk-nav uk-nav-side uk-nav-parent-icon">
+                {% for i in nets %}
+                            <li class="{% if currNetId == i.id %}uk-active{% endif %}">
+                                <a  href="{{ prefix }}/?net={{ i.id }}">{{ i.name }}</a>
+                            </li>
+                {% endfor %}
+                        </ul>
+                    </div>
+                {% endblock %}
+                </div>
+        <!-- right area -->
+        {% block right %}
+        {% endblock %}
+            </div>
+        </div>
+    {% endblock %}
+    </body>
+</html>
