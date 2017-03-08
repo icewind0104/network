@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script type="text/javascript">
+    $('document').ready(function(){
+        args = function() {
+            var qs = (location.search.length > 0 ? location.search.substring(1) : "");
+            var args = {};
+            var items = qs.length ? qs.split("&") : [];
+            var item = null, name = null, value = null;
+            var i = 0, len = items.length;
+            for (i=0; i<len; i++) {
+                item = items[i].split("=");
+                name = decodeURIComponent(item[0]);
+                value = decodeURIComponent(item[1]);
+                if (name.length) {
+                    args[name] = value;
+                }
+            }
+            return args;
+        }();
+
+        $("input#filter_used").click(function(){
+            if (this.checked == true) {
+                args["unused"] = "true";
+            }
+            if (this.checked == false) {
+                args["unused"] = "false";
+            }
+            var search = "";
+            for (name in args) {
+                search = search + "&" + name + "=" + args[name];
+            }
+            if (search.length > 0) {
+                search = "?" + search.substring(1);
+            }
+            location.href = search;
+        });
+
+        $("a.modify").click(
+            function(){
+                //$("#modifybox #addr").val($(this).attr('id'));
+                $("#modifybox #name").val($(this).parent().parent().parent().find('td#name').text());
+                $("#modifybox #catagory").val($(this).parent().parent().parent().find('td#catagory').text());
+                $("#modifybox #employee_id").val($(this).parent().parent().parent().find('td#user').text());
+                $("#modifybox #serial").val($(this).parent().parent().parent().find('td#serial').text());
+                $("#modifybox #note").val($(this).parent().parent().parent().find('td#note').text());
+                $("form#ipUpdate").attr("action", "{{prefix}}/assets/"+$(this).attr('id')+"/update/");
+            });
+
+        $("a.danger").click(
+            function(){
+                $("#deletebox").find(".motion").text(
+                    $(this).parent().parent().parent().find("#name").text()
+                );
+                $("form#ipDelete").attr("action", "{{prefix}}/assets/"+$(this).attr('id')+"/delete/");
+            });
+
+    });
+</script>
+{% endblock %}
+
+{% block left %}
+    <ul class="uk-nav uk-nav-side uk-nav-parent-icon">
+        {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
+        <li>
+            <a href="#netaddbox" data-uk-modal><i class="uk-icon-plus-square"></i>&nbsp添加资产</a>
+        </li>
+        <li class="uk-nav-divider"></li>
+        {% endif %}
+
+        <li class="{% if not catagory %}uk-active{% endif %}"><a  href="/asset/">所有</a></li>
+        <li class="{% if catagory == '显示器' %}uk-active{% endif %}"><a  href="/asset/?catagory=%e6%98%be%e7%a4%ba%e5%99%a8">显示器</a></li>
+        <li class="{% if catagory == '台式主机' %}uk-active{% endif %}"><a  href="/asset/?catagory=%e5%8f%b0%e5%bc%8f%e4%b8%bb%e6%9c%ba">台式主机</a></li>
+        <li class="{% if catagory == '其他' %}uk-active{% endif %}"><a  href="/asset/?catagory=%e5%85%b6%e4%bb%96">其他</a></li>
+        <li class="uk-nav-divider"></li>
+        <li><input id="filter_used" type="checkbox" {% if session['unused'] == True %}checked{% endif %}/>只显示未使用资产</li>
+    </ul>
+{% endblock %}
+
+{% block right %}
+    <div class="uk-width-3-4">
+        <!-- search box -->
+        <div class="uk-container" style="padding:0px;" data-uk-sticky="{top:10}">
+            <div class="uk-flex-right uk-grid">
+                <div class="uk-width-1-2"></div>
+                <div class="uk-text-right uk-width-1-2">
+                <form class="uk-form" method="POST" action="{{prefix}}/asset/{{ processor_generate_search(catagory=catagory) }}">
+                    <fieldset data-uk-margin>
+                        <div class="uk-form-icon"><i class="uk-icon-search"></i>
+                        <input placeholder="search..." autocomplete="off" type="text" name="search" value="{% if search_key %}{{search_key}}{% endif %}">
+                        <button class="uk-button mybutton">搜索</button></div>
+                    </fieldset>
+                </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- table list -->
+        <div class="uk-overflow-container">
+            <table class="uk-table uk-text-nowrap uk-table-hover uk-table-striped">
+                <thead>
+                    <tr style="background-image:linear-gradient(to bottom,#fff,#eee);">
+                        <th class="">资产分类</th>
+                        <th class="">资产标题</th>
+                        <th class="">责任人</th>
+                        <th class="">资产编号</th>
+                        <th class="">备注</th>
+                        {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
+                        <th class="">操作</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                {% for  asset, employee_name in assets %}
+                    <tr class="uk-visible-hover-inline" id="{{asset.id}}">
+                        <td id="catagory" class="">{{ asset.catagory|safe }}</td>
+                        <td id="name" class="">{{ asset.name|safe }}</td>
+                        <td id="user" class="">{% if asset.employee_name %}{{ asset.employee_name|safe }}{% elif employee_name %}{{ employee_name }}{% endif %}</td>
+                        <td id="serial" class="">{% if asset.serial %}{{ asset.serial|safe }}{% endif %}</td>
+                        <td id="note" class="">{% if asset.note %}{{ asset.note|safe }}{% endif %}</td>
+                        {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
+                        <td  class="">
+                            <!-- Operators -->
+                            <div>
+                                <a id="{{asset.id}}" class="modify" href="#modifybox" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
+                                <a id="{{asset.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-times-circle"></i></a>
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% if not assets %}
+            <div class="uk-alert uk-alert-warning">
+                {% if IP_count %}未找到相关内容 ....{% else %}点击左侧网络或使用搜索查找信息{%endif%}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- pagination -->
+        {% if Page %}
+        <ul class="uk-pagination uk-panel uk-panel-box" style="padding:15px;">
+            {% if Page.previous_page %}
+                <li><a href="{{prefix}}/asset/{{ processor_generate_search(catagory=catagory, page=Page.previous_page, search=search) }}"><span><<</span></a></li>
+            {% else %}
+                <li class="uk-disabled"><span>&lt;&lt;</span></li>
+            {% endif %}
+
+            {% for p in Page.all_page() %}
+                {% if p == "..." %}<li><span>{{p}}</span></li>
+                {% else %}
+                    {% if p == Page.curr_page %}
+                        <li class="uk-active"><span>{{p}}</span></li>
+                    {% else %}
+                        <li><a href="{{prefix}}/asset/{{ processor_generate_search(catagory=catagory, page=p, search=search) }}">{{p}}</a></li>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            {% if Page.next_page %}
+                <li><a href="{{prefix}}/asset/{{ processor_generate_search(catagory=catagory, page=Page.next_page, search=search) }}"><span>>></span></a></li>
+            {% else %}
+                <li class="uk-disabled"><span>&gt;&gt;</span></li>
+            {% endif %}
+        </ul>
+        {% endif %}
+
+    </div>
+
+{% endblock %}
+
+{% block windows %}
+{% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
+<form action="{{prefix}}/assets/add/" class="uk-form uk-form-horizontal" method="POST">
+    {{ form.hidden_tag() }}
+
+    <div id="netaddbox" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-plus uk-icon-medium" style="color:#8CC14C;"></i><h2>添加新网络</h2></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">资产分类<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                {{ form.catagory }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">资产标题<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                {{ form.name }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">使用人姓名<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                {{ form.employee_id }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">资产编号</label><div class="uk-form-controls">
+                {{ form.serial }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">资产备注</label><div class="uk-form-controls">
+                {{ form.note }}
+            </div></div>
+
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-primary" type="submit">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+<form action="" id="ipUpdate" class="uk-form uk-form-horizontal" method="POST">
+    {{ form.hidden_tag() }}
+    <div id="modifybox" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-pencil-square-o uk-icon-medium" style="color:#07d;"></i><h2>修改使用人</h2></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">资产分类<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                {{ form.catagory }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">资产标题<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                {{ form.name }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">使用人姓名<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                {{ form.employee_id }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">资产编号</label><div class="uk-form-controls">
+                {{ form.serial }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">资产备注</label><div class="uk-form-controls">
+                {{ form.note }}
+            </div></div>
+
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-primary">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+<form action="" id="ipDelete" class="uk-form" method="POST">
+    <div id="deletebox" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-times-circle uk-icon-medium" style="color:#f00;"></i><h2>删除IP地址</h2></div>
+            确定停用&nbsp;<span class="motion"></span>&nbsp;吗？
+            <input type="text" class="uk-hidden" name="ip_id" id="delete_ip_id">
+            <input type="text" class="uk-hidden" name="operate" value="delete">
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-danger">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+{% endif %}
+{% endblock %}

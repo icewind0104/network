@@ -1,9 +1,0 @@
-{% extends "ipmanage/base.html" %}
-
-{% block right %}
-<div class="uk-width-medium-3-4">
-{% for net in nets %}
-    <li><a href="{% url 'ipmanage:net_list' %}">{{ net.desc }}</a></li>
-{% endfor %}
-</div>
-{% endblock %}

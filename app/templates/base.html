@@ -10,13 +10,26 @@
         <script src="/oeasy-asset-center/js/jquery.js"></script>
         <script src="/oeasy-asset-center/js/uikit.min.js"></script>
         <script src="/oeasy-asset-center/js/components/sticky.js"></script>
-        {% block head %}
-        {% endblock %}
+        {% block head %}<!-- block head -->{% endblock %}
 
     </head>
 
     <body>
     {% block body %}
+        <!--<nav class="uk-navbar">
+            <ul class="uk-navbar-nav">
+                <a href="" class="uk-navbar-brand">零壹移动互联</a>
+                <li class="uk-active"><a href="/">IP地址查询</a></li>
+                <li class=""><a href="/asset/">资产查询</a></li>
+            </ul>
+            -- Float Right --
+            <div class="uk-navbar-flip">
+                <ul class="uk-navbar-nav">
+                    <li><a href="/login/">进入管理员视图</a></li>
+                </ul>
+            </div>
+        </nav>-->
+
         <div class="uk-container uk-container-center uk-margin-top uk-margin-large-bottom">
 
         <!-- error display -->
@@ -32,87 +45,35 @@
         {% endwith %}
 
             <div class="uk-grid" style="min-width:1000px;">
-                <!-- left net box -->
+                <!-- left area -->
                 <div class="uk-width-1-5">
                     <!-- account bar -->
-                    <div class="logout-box uk-panel uk-text-center uk-panel-box uk-margin-top" style="border:1px dashed #bbb;">
+                    {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
+                    <div class="logout-box uk-panel uk-text-center uk-panel-box uk-margin-top uk-margin-bottom" style="border:1px dashed #bbb;">
                         <dl class="uk-description-list-line">
-                            <!--<dt>Description</dt>-->
                             <dd id="netdesc">Hi!&nbsp;{{ current_user.username }}
                                 <span class="uk-margin-left">|</span><a href="{{prefix}}/logout/" class="uk-margin-left">登出</a>
                             </dd>
                         </dl>
                     </div>
-                    <hr class="uk-grid-divider"></hr>
-                {% block left %}
-                    <div class="uk-panel uk-panel-box">
-                        <h3 class="uk-panel-title">部门/项目组</h3>
-                    {% if current_user and current_user.catagory == 'administrator' %}
-                        <ul class="uk-nav uk-nav-side uk-nav-parent-icon">
-                        <li>
-                            <a href="{{prefix}}/net/">
-                                <i class="uk-icon-gear"></i>&nbsp设置
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#netaddbox" data-uk-modal>
-                                <i class="uk-icon-plus-square"></i>&nbsp新增网段
-                            </a>
-                        </li>
-                        <li class="uk-nav-divider"></li>
                     {% endif %}
-                {% for i in nets %}
-                            <li class="{% if currNetId == i.id %}uk-active{% endif %}">
-                                <a  href="{{prefix}}/admin/?net={{ i.id }}">{{ i.name }}</a>
-                            </li>
-                {% endfor %}
-                        </ul>
-                    </div>
-                {% endblock %}
+
+                    <!-- navigator -->
+                    <ul class="uk-tab">
+                        <li class="{% if request.path=='/employee/' %}uk-active{% endif %}"><a href="/employee">员工</a></li>
+                        <li class="{% if request.path=='/' or request.path=='/net/' %}uk-active{% endif %}"><a href="/">IP</a></li>
+                        <li class="{% if request.path=='/asset/' %}uk-active{% endif %}"><a href="/asset/">资产</a></li>
+                    </ul>
+
+                    {% block left %}<!-- block left -->{% endblock %}
                 </div>
-        <!-- right area -->
-        {% block right %}
-        {% endblock %}
+
+                <!-- right area -->
+                {% block right %}<!-- block right -->{% endblock %}
             </div>
         </div>
     {% endblock %}
     </body>
 </html>
 
-{% if current_user and current_user.catagory == 'administrator' %}
-<!-- 弹窗 -->
-<form action="{{prefix}}/net/add/" class="uk-form uk-form-horizontal" method="POST">
-    {{ form.hidden_tag() }}
-
-    <div id="netaddbox" class="uk-modal">
-        <div class="uk-modal-dialog">
-            <div class="uk-modal-header uk-grid"><i class="uk-icon-plus uk-icon-medium" style="color:#8CC14C;"></i><h2>添加新网络</h2></div>
-
-            <div class="uk-form-row"><label class="uk-form-label">网络名称<span style="color:#07d;">（必填）</sp
-an></label><div class="uk-form-controls">
-                <!--<input id="netmodifyname" type="text" autocomplete="off" name="name">-->
-                {{ form.name }}
-            </div></div>
-            <!--<div class="uk-form-row"><label class="uk-form-label">附加描述</label><div class="uk-form-contro
-                ls"><textarea id="netmodifydesc" type="text" autocomplete="off" name="desc"></textarea></div></div>-->
-
-            <div class="uk-form-row"><label class="uk-form-label">起始IP地址</label><div class="uk-form-controls
-">
-                <!--<input id="netmodifyname" type="text" autocomplete="off" name="ipstart">-->
-                {{ form.ipstart }}
-            </div></div>
-
-            <div class="uk-form-row"><label class="uk-form-label">结束IP地址</label><div class="uk-form-controls
-">
-                <!--<input id="netmodifyname" type="text" autocomplete="off" name="ipend">-->
-                {{ form.ipend }}
-            </div></div>
-
-            <div class="uk-modal-footer uk-text-right">
-                <button class="uk-button uk-modal-close" type="button">取消</button>
-                <button class="uk-button uk-button-primary" type="submit">确定</button>
-            </div>
-        </div>
-    </div>
-</form>
-{% endif %}
+{% block windows %}<!-- block windows -->{% endblock %}

@@ -1,12 +1,23 @@
 <html>
 <head></head>
 <body>
-	<form action="/test/deal" method="POST">
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+    {% for catagory, message in messages %}
+        {{ message }}
+    {% endfor %}
+{% endif %}
+{% endwith %}
+	<form action="/employees/add/" method="POST">
 	{{ form.hidden_tag() }}
-		network name: {{ form.name }}<br>
-		network start ip: {{ form.ipstart }}<br>
-		network end ip: {{ form.ipend }}<br>
+		name: {{ form.name }}<br>
+		department: {{ form.department }}<br>
 		<input type="submit" value="ok"/>
 	</form>
+	<ul>
+		{% for obj in objs %}
+		<li>{{ obj.id }}-{{ obj.name}}-{{ obj.user }}<a href="/employees/{{ obj.id }}/delete/">删除</a></li>
+		{% endfor %}
+	</ul>
 </body>
 </html>

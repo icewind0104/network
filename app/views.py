@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 from app import app, models, mylib, db, lm
-from flask import render_template, flash, redirect, url_for, g, request
-from app.forms import Net, Ip, Login
+from flask import render_template, flash, redirect, url_for, g, request, session
+from app.forms import Net, Ip, Login, Asset, Employee
 from wtforms import StringField
 from sqlalchemy import or_
 from flask_login import login_required, login_user, logout_user, current_user
-import re
+import re, urllib
 
 #prefix = '/oeasy-asset-center'
 prefix = ''
+
+# --------- User Manage [START] ----------
 
 @lm.user_loader
 def load_user(id):
@@ -30,7 +32,7 @@ def login():
         else:
             login_user(user)
             next = request.args.get('next')
-            return redirect(next or url_for('admin'))
+            return redirect(next or url_for('index'))
     return render_template('login.html', form=form, prefix=prefix)
 
 @app.route('/logout/')
@@ -38,51 +40,14 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+# --------- User Manage [ END ] ----------
+
+#--------------------------------------------
+#   IP - /
+#--------------------------------------------
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    net_id = request.args.get('net', None)
-    search = request.form['search'] if request.method == 'POST' else None
-
-    # 获取网络列表
-    Nets = models.nets.query.order_by(models.nets.ipstart).all()
-
-    # 获取IP列表
-    IPs = []
-    if search is not None:
-        IPs = models.ips.query.filter(or_(
-            models.ips.user.contains(search),
-            models.ips.mac.contains(search),
-            models.ips.device.contains(search),
-            models.ips.addr_str.contains(search)
-        )).all()
-        for each in IPs:
-            each.addr_str = each.addr_str.replace(search, '<span class="search">'+search+'</span>')
-            each.mac = each.mac.replace(search, '<span class="search">'+search+'</span>')
-            each.device = each.device.replace(search, '<span class="search">'+search+'</span>')
-            each.user = each.user.replace(search, '<span class="search">'+search+'</span>')
-    if net_id is not None:
-        net_id = int(net_id)
-        curr_net = models.nets.query.get(net_id)
-        if curr_net is not None:
-            ips = models.ips.query.filter(models.ips.addr.between(curr_net.ipstart, curr_net.ipend)).order_by(models.ips.addr).all()
-            # add tail element
-            ips.append(None)
-            ip = ips.pop(0)
-            for each in range(curr_net.ipstart, curr_net.ipend+1):
-                # 未使用的IP
-                if ip is None or each != ip.addr:
-                    IPs.append(models.ips(addr=each, user=None))
-                # 已使用的IP
-                else:
-                    IPs.append(ip)
-                    ip = ips.pop(0)
-
-    # 渲染
-    return render_template('index.html', nets=Nets, currNetId=net_id, IPs=IPs, prefix=prefix)
-
-@app.route('/admin/', methods=['GET', 'POST'])
-@login_required
-def admin():
     net_id = request.args.get('net', None)
     search = request.form['search'] if request.method == 'POST' else None
 
@@ -95,40 +60,124 @@ def admin():
     # 获取IP列表
     IPs = []
     if search is not None:
-        IPs = models.ips.query.filter(or_(
+        IPs = db.session.query(
+                models.nets.name,
+                models.ips
+        ).filter(or_(
+            models.nets.name.contains(search),
             models.ips.user.contains(search),
             models.ips.mac.contains(search),
             models.ips.device.contains(search),
             models.ips.addr_str.contains(search)
         )).all()
-        for each in IPs:
-            each.addr_str = each.addr_str.replace(search, '<span class="search">'+search+'</span>')
-            each.mac = each.mac.replace(search, '<span class="search">'+search+'</span>')
-            each.device = each.device.replace(search, '<span class="search">'+search+'</span>')
-            each.user = each.user.replace(search, '<span class="search">'+search+'</span>')
+        for net_name, ip in IPs:
+            ip.net_name = net_name.replace(search, '<span class="search">'+search+'</span>')
+            ip.addr_str = ip.addr_str.replace(search, '<span class="search">'+search+'</span>')
+            ip.mac = ip.mac.replace(search, '<span class="search">'+search+'</span>')
+            ip.device = ip.device.replace(search, '<span class="search">'+search+'</span>')
+            ip.user = ip.user.replace(search, '<span class="search">'+search+'</span>')
     if net_id is not None:
         net_id = int(net_id)
         form_ip.net.data = net_id
         curr_net = models.nets.query.get(net_id)
         if curr_net is not None:
-            ips = models.ips.query.filter(models.ips.addr.between(curr_net.ipstart, curr_net.ipend)).order_by(models.ips.addr).all()
+            res = db.session.query(
+                models.nets.name, models.ips
+            ).filter(
+                models.ips.addr.between(curr_net.ipstart, curr_net.ipend)
+            ).order_by(
+                models.ips.addr
+            ).all()
             # add tail element
-            ips.append(None)
-            ip = ips.pop(0)
+            res.append(None)
+            one_res = res.pop(0)
             for each in range(curr_net.ipstart, curr_net.ipend+1):
                 # 未使用的IP
-                if ip is None or each != ip.addr:
-                    IPs.append(models.ips(addr=each, user=None))
+                if one_res is None or each != one_res[1].addr:
+                    ip = models.ips(addr=each, user=None)
+                    ip.net_name = curr_net.name
+                    IPs.append((None, ip))
                 # 已使用的IP
                 else:
-                    IPs.append(ip)
-                    ip = ips.pop(0)
+                    one_res[1].net_name = curr_net.name 
+                    IPs.append(one_res)
+                    one_res = res.pop(0)
 
     # 渲染
-    return render_template('admin.html', form=form, form_ip=form_ip, nets=Nets, currNetId=net_id, IPs=IPs, prefix=prefix)
+    return render_template('index.html', form=form, form_ip=form_ip, nets=Nets, currNetId=net_id, IPs=IPs, prefix=prefix)
+
+#--------------------------------------------
+#   Asset - /asset/
+#--------------------------------------------
+
+@app.route('/asset/', methods=['GET', 'POST'])
+def asset():
+    max_list = 12
+    query = db.session.query(models.assets, models.employees.name).outerjoin(models.employees)
+
+    # 过滤未使用的资产
+    unused = request.args.get('unused', None)
+    if unused == 'true':
+        session['unused'] = True
+    elif unused == 'false':
+        session['unused'] = False
+
+    # 搜索关键词
+    search = request.form['search'] if request.method == 'POST' else request.args.get('search', None)
+    if search is not None and search != '':
+        query = query.filter(or_(
+            models.employees.name.contains(search),
+            models.assets.catagory.contains(search),
+            models.assets.name.contains(search),
+            models.assets.serial.contains(search),
+            models.assets.note.contains(search)
+        ))
+
+    # 设置分类
+    catagory = request.args.get('catagory', None)
+    if catagory:
+        catagory = urllib.parse.unquote(catagory)
+        query = query.filter(models.assets.catagory == catagory)
+
+    form = Asset()
+    if session.get('unused', False) == True:
+        query = query.filter(models.assets.employee_id == None)
+
+    # 页码
+    curr_page = request.args.get('page', None) or 1
+    try:
+        curr_page = int(curr_page)
+    except:
+        curr_page = 1
+    Page = mylib.page(query.count(), max_list, curr_page)
+    if curr_page < 1 or curr_page > Page.count:
+        Page.curr_page = 1
+    assets = query[(int(curr_page)-1)*max_list:(int(curr_page)-1)*max_list+max_list]
+
+    # 渲染搜索结果
+    if search is not None and search != '':
+        for asset, employee_name in assets:
+            asset.employee_name = employee_name.replace(search, '<span class="search">'+search+'</span>') if employee_name else None
+            asset.name = asset.name.replace(search, '<span class="search">'+search+'</span>') if asset.name else None
+            asset.serial = asset.serial.replace(search, '<span class="search">'+search+'</span>') if asset.serial else None
+            asset.note = asset.note.replace(search, '<span class="search">'+search+'</span>') if asset.note else None
+            asset.catagory = asset.catagory.replace(search, '<span class="search">'+search+'</span>') if asset.catagory else None
+
+    return render_template('asset.html', prefix=prefix, assets=assets, form=form, catagory=catagory, Page=Page, search=search)
+
+#--------------------------------------------
+#   Employee - /employee/
+#--------------------------------------------
+
+@app.route('/employee/', methods=['GET', 'POST'])
+def employee():
+    form = Employee()
+    employees = models.employees.query.all()
+    return render_template('employee.html', prefix=prefix, employees=employees, form=form)
 
 # --------ip--------
 @app.route('/ip/add/', methods=['GET', 'POST'])
+@login_required
 def ip_add():
     form = Ip()
     if form.validate_on_submit():
@@ -148,6 +197,7 @@ def ip_add():
     return form.redirect()
 
 @app.route('/ip/<int:ID>/delete/', methods=['GET', 'POST'])
+@login_required
 def ip_delete(ID):
     form = Ip()
     try:
@@ -161,6 +211,7 @@ def ip_delete(ID):
     return form.redirect()
 
 @app.route('/ip/<int:ID>/update/', methods=['GET', 'POST'])
+@login_required
 def ip_update(ID):
     form = Ip()
     if form.validate_on_submit():
@@ -178,12 +229,14 @@ def ip_update(ID):
 
 # --------net--------
 @app.route('/net/')
+@login_required
 def net():
     form = Net()
     nets = models.nets.query.order_by(models.nets.ipstart).all()
     return render_template('net.html', form=form, nets=nets, prefix=prefix)
 
-@app.route('/net/add/', methods=['GET', 'POST'])
+@app.route('/nets/add/', methods=['GET', 'POST'])
+@login_required
 def net_add():
     form = Net()
     if form.validate_on_submit():
@@ -193,14 +246,15 @@ def net_add():
         try:
             db.session.add(net)
             db.session.commit()
-            return redirect(url_for('admin')+'?net='+str(net.id))
+            return redirect(url_for('net'))
         except Exception as e:
             db.session.rollback()
             print(e)
-            flash('创建网络失败')
+            flash('创建网络失败:'+str(e))
     return form.redirect()
 
-@app.route('/net/<int:ID>/delete/', methods=['GET', 'POST'])
+@app.route('/nets/<int:ID>/delete/', methods=['GET', 'POST'])
+@login_required
 def net_delete(ID):
     form = Net()
     try:
@@ -215,7 +269,8 @@ def net_delete(ID):
         flash('网络删除失败')
     return form.redirect()
 
-@app.route('/net/<int:net_id>/update/', methods=['GET', 'POST'])
+@app.route('/nets/<int:net_id>/update/', methods=['GET', 'POST'])
+@login_required
 def net_update(net_id):
     form = Net()
     if form.validate_on_submit():
@@ -231,7 +286,7 @@ def net_update(net_id):
             flash('网络更新失败')
     return form.redirect()
 
-# 仅作为开发测试各项功能时使用
+# -------------[ Test Start ]---------------
 @app.route('/inital/', methods=['GET', 'POST'])
 def test_init():
     user = models.users.query.filter_by(username = 'admin').first()
@@ -260,3 +315,104 @@ def test_clean():
             return 'User(%s) delete failed: %s' % (username, str(e))
     else:
          return 'User not exist'
+
+from wtforms import StringField
+@app.route('/test/', methods=['GET', 'POST'])
+def test():
+    objs = db.session.query(models.employees).all()
+    form = Employee()
+    return render_template('test.html', form=form, objs=objs)
+
+def create_model_func(model, Form):
+    # 模板-添加记录
+    def add():
+        form = Form()
+        if form.validate_on_submit():
+            kw = {}
+            for each in form:
+                if each.id != 'csrf_token':
+                    key = each.name
+                    value = each.data
+                    if value != '':
+                        if getattr(each, 'need_search_id', None):
+                            rl_model = getattr(models, each.related_model)
+                            related_model =  rl_model.query.filter_by(**{each.related_column:value}).first()
+                            if related_model is None:
+                                flash('添加失败, 未找到(%s)' % each.data)
+                                return form.redirect()
+                            else:
+                                value = related_model.id
+                        kw.update({key:value})
+            obj = model(**kw)
+            try:
+                db.session.add(obj)
+                db.session.commit()
+            except:
+                flash('添加失败')
+        return form.redirect()
+    add.__name__ = model.__name__+'_add'
+    app.route('/%s/add/' % model.__name__, methods=['GET', 'POST'])(add)
+
+    # 模板-删除记录
+    def delete(ID):
+        form = Form()
+        obj = model.query.get(ID)
+        try:
+            db.session.delete(obj)
+            db.session.commit()
+        except:
+            flash('删除失败')
+        return form.redirect()
+    delete.__name__ = model.__name__+'_delete'
+    app.route('/%s/<int:ID>/delete/' % model.__name__, methods=['GET', 'POST'])(delete)
+
+    # 模板-修改记录
+    def update(ID):
+        form = Form()
+        obj = model.query.get(ID)
+        if obj is not None and form.validate_on_submit():
+            for each in form:
+                if each.id != 'csrf_token':
+                    key = each.name
+                    value = each.data
+                    if key != 'id' and value != '':
+                        if getattr(each, 'need_search_id', None):
+                            rl_model = getattr(models, each.related_model)
+                            related_model =  rl_model.query.filter_by(**{each.related_column:value}).first()
+                            if related_model is None:
+                                flash('修改失败')
+                                return form.redirect()
+                            else:
+                                value = related_model.id
+                        setattr(obj, key, value)
+            try:
+                db.session.commit()
+            except:
+                db.session.rollback()
+                flash('更新失败')
+        return form.redirect()
+    update.__name__ = model.__name__+'update'
+    app.route('/%s/<int:ID>/update/' % model.__name__, methods=['GET', 'POST'])(update)
+
+create_model_func(models.assets, Asset)
+create_model_func(models.employees, Employee)
+
+# ---------------[ Test END ]---------------
+
+# context processor
+@app.context_processor
+def search_processor():
+    def generate_search(**kw):
+        args = []
+        if kw:
+            for key, value in kw.items():
+                if value is not None and value != '':
+                    args.append('%s=%s' % (key, value))
+            if len(args) > 0:
+                return '?'+'&'.join(args)
+        return ''
+    return dict(processor_generate_search = generate_search)
+
+
+
+

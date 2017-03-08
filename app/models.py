@@ -1,8 +1,10 @@
 from app import db, mylib
 
-class bignets(db.Model):
+class employees(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = name = db.Column(db.String(64), nullable=False)
+    name = db.Column(db.String(64), nullable=False, unique=True)
+    department = db.Column(db.String(64), nullable=False)
+    assets = db.relationship('assets', backref='assets_user', lazy='dynamic')
 
 class nets(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -53,3 +55,11 @@ class users(db.Model):
 
     def get_id(self):
         return str(self.id)
+
+class assets(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    serial = db.Column(db.String(32), nullable=True)
+    catagory = db.Column(db.String(32), nullable=False)
+    name = db.Column(db.String(128), nullable=False)
+    note = db.Column(db.String(64), nullable=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), index=True, nullable=True)
