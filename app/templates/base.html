@@ -60,9 +60,9 @@
 
                     <!-- navigator -->
                     <ul class="uk-tab">
-                        <li class="{% if request.path=='/employee/' %}uk-active{% endif %}"><a href="/employee">员工</a></li>
-                        <li class="{% if request.path=='/' or request.path=='/net/' %}uk-active{% endif %}"><a href="/">IP</a></li>
-                        <li class="{% if request.path=='/asset/' %}uk-active{% endif %}"><a href="/asset/">资产</a></li>
+                        <li class="{% if request.path=='/employee/' %}uk-active{% endif %}"><a href="{{prefix}}/employee">员工</a></li>
+                        <li class="{% if request.path=='/' or request.path=='/net/' %}uk-active{% endif %}"><a href="{{prefix}}/">IP</a></li>
+                        <li class="{% if request.path=='/asset/' %}uk-active{% endif %}"><a href="{{prefix}}/asset/">资产</a></li>
                     </ul>
 
                     {% block left %}<!-- block left -->{% endblock %}
