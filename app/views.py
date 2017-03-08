@@ -7,8 +7,7 @@ from sqlalchemy import or_
 from flask_login import login_required, login_user, logout_user, current_user
 import re, urllib
 
-#prefix = '/oeasy-asset-center'
-prefix = ''
+prefix = app.config['MOUNT_POINT']
 
 # --------- User Manage [START] ----------
 
