@@ -65,7 +65,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for net_name, IP in IPs %}
+                {% for IP, net_name in IPs %}
                     <tr class="uk-visible-hover-inline" id="{% if IP.user %}used{% endif %}">
                         <td id="addr" class="">{% if IP.addr_str %}{{ IP.addr_str|safe }}{% else %}{{ IP.addr_ntop }}{% endif %}</td>
                         <td id="user" class="">{% if IP.user %}{{ IP.user|safe }}{% endif %}</td>

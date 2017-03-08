@@ -59,9 +59,7 @@ def index():
     # 获取IP列表
     IPs = []
     if search is not None:
-        IPs = db.session.query(
-                models.nets.name,
-                models.ips
+        IPs = db.session.query(models.ips,models.nets.name
         ).filter(or_(
             models.nets.name.contains(search),
             models.ips.user.contains(search),
@@ -69,19 +67,18 @@ def index():
             models.ips.device.contains(search),
             models.ips.addr_str.contains(search)
         )).all()
-        for net_name, ip in IPs:
+        for ip, net_name in IPs:
             ip.net_name = net_name.replace(search, '<span class="search">'+search+'</span>')
             ip.addr_str = ip.addr_str.replace(search, '<span class="search">'+search+'</span>')
-            ip.mac = ip.mac.replace(search, '<span class="search">'+search+'</span>')
-            ip.device = ip.device.replace(search, '<span class="search">'+search+'</span>')
+            ip.mac = ip.mac.replace(search, '<span class="search">'+search+'</span>') if ip.mac else None
+            ip.device = ip.device.replace(search, '<span class="search">'+search+'</span>') if ip.device else None
             ip.user = ip.user.replace(search, '<span class="search">'+search+'</span>')
     if net_id is not None:
         net_id = int(net_id)
         form_ip.net.data = net_id
         curr_net = models.nets.query.get(net_id)
         if curr_net is not None:
-            res = db.session.query(
-                models.nets.name, models.ips
+            res = db.session.query(models.ips, models.nets.name).outerjoin(models.nets
             ).filter(
                 models.ips.addr.between(curr_net.ipstart, curr_net.ipend)
             ).order_by(
@@ -92,13 +89,13 @@ def index():
             one_res = res.pop(0)
             for each in range(curr_net.ipstart, curr_net.ipend+1):
                 # 未使用的IP
-                if one_res is None or each != one_res[1].addr:
+                if one_res is None or each != one_res[0].addr:
                     ip = models.ips(addr=each, user=None)
                     ip.net_name = curr_net.name
-                    IPs.append((None, ip))
+                    IPs.append((ip, None))
                 # 已使用的IP
                 else:
-                    one_res[1].net_name = curr_net.name 
+                    one_res[0].net_name = curr_net.name 
                     IPs.append(one_res)
                     one_res = res.pop(0)
 
@@ -171,8 +168,37 @@ def asset():
 @app.route('/employee/', methods=['GET', 'POST'])
 def employee():
     form = Employee()
-    employees = models.employees.query.all()
-    return render_template('employee.html', prefix=prefix, employees=employees, form=form)
+    query = models.employees.query
+    max_list = 12
+
+    # 搜索
+    search = request.form['search'] if request.method == 'POST' else request.args.get('search', None)
+    if search is not None and search != '':
+        query = query.filter(or_(
+            models.employees.name.contains(search),
+            models.employees.department.contains(search),
+        ))
+
+    # 页码
+    curr_page = request.args.get('page', None) or 1
+    try:
+        curr_page = int(curr_page)
+    except:
+        curr_page = 1
+    Page = mylib.page(query.count(), max_list, curr_page)
+    if curr_page < 1 or curr_page > Page.count:
+        Page.curr_page = 1
+    employees = query[(int(curr_page)-1)*max_list:(int(curr_page)-1)*max_list+max_list]
+
+
+    # 渲染搜索结果
+    if search is not None and search != '':
+        for employee in employees:
+            employee.name = employee.name.replace(search, '<span class="search">'+search+'</span>') if employee.name else None
+            employee.department = employee.department.replace(search, '<span class="search">'+search+'</span>') if employee.department else None
+
+
+    return render_template('employee.html', prefix=prefix, employees=employees, form=form, Page=Page, search=search)
 
 # --------ip--------
 @app.route('/ip/add/', methods=['GET', 'POST'])

@@ -1,4 +1,0 @@
-{% extends "ipmanage/base.html" %}
-
-{% block left %}
-{% endblock %}
