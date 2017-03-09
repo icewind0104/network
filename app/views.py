@@ -59,26 +59,26 @@ def index():
     # 获取IP列表
     IPs = []
     if search is not None:
-        IPs = db.session.query(models.ips,models.nets.name
+        IPs = db.session.query(models.ips, models.nets.name, models.employees.name).outerjoin(models.nets, models.employees
         ).filter(or_(
             models.nets.name.contains(search),
-            models.ips.user.contains(search),
+            models.employees.name.contains(search),
             models.ips.mac.contains(search),
             models.ips.device.contains(search),
             models.ips.addr_str.contains(search)
         )).all()
-        for ip, net_name in IPs:
+        for ip, net_name, employee_name in IPs:
             ip.net_name = net_name.replace(search, '<span class="search">'+search+'</span>')
             ip.addr_str = ip.addr_str.replace(search, '<span class="search">'+search+'</span>')
             ip.mac = ip.mac.replace(search, '<span class="search">'+search+'</span>') if ip.mac else None
             ip.device = ip.device.replace(search, '<span class="search">'+search+'</span>') if ip.device else None
-            ip.user = ip.user.replace(search, '<span class="search">'+search+'</span>')
+            ip.employee_name = employee_name.replace(search, '<span class="search">'+search+'</span>')
     if net_id is not None:
         net_id = int(net_id)
         form_ip.net.data = net_id
         curr_net = models.nets.query.get(net_id)
         if curr_net is not None:
-            res = db.session.query(models.ips, models.nets.name).outerjoin(models.nets
+            res = db.session.query(models.ips, models.nets.name, models.employees.name).outerjoin(models.nets).outerjoin(models.employees
             ).filter(
                 models.ips.addr.between(curr_net.ipstart, curr_net.ipend)
             ).order_by(
@@ -90,12 +90,13 @@ def index():
             for each in range(curr_net.ipstart, curr_net.ipend+1):
                 # 未使用的IP
                 if one_res is None or each != one_res[0].addr:
-                    ip = models.ips(addr=each, user=None)
+                    ip = models.ips(addr=each)
                     ip.net_name = curr_net.name
-                    IPs.append((ip, None))
+                    IPs.append((ip, None, None))
                 # 已使用的IP
                 else:
-                    one_res[0].net_name = curr_net.name 
+                    one_res[0].net_name = curr_net.name
+                    one_res[0].employee_name = one_res[2]
                     IPs.append(one_res)
                     one_res = res.pop(0)
 
@@ -190,13 +191,11 @@ def employee():
         Page.curr_page = 1
     employees = query[(int(curr_page)-1)*max_list:(int(curr_page)-1)*max_list+max_list]
 
-
     # 渲染搜索结果
     if search is not None and search != '':
         for employee in employees:
             employee.name = employee.name.replace(search, '<span class="search">'+search+'</span>') if employee.name else None
             employee.department = employee.department.replace(search, '<span class="search">'+search+'</span>') if employee.department else None
-
 
     return render_template('employee.html', prefix=prefix, employees=employees, form=form, Page=Page, search=search)
 
@@ -206,9 +205,14 @@ def employee():
 def ip_add():
     form = Ip()
     if form.validate_on_submit():
+        employee = models.employees.query.filter_by(name=form.user.data).first()
+        if employee is None:
+            flash('IP地址启用失败: 未找到员工 %s' % form.user.data)
+            return form.redirect()
+
         ip = models.ips(addr = form.addr.data,
                         addr_str = mylib.inet_ntop(form.addr.data),
-                        user = form.user.data,
+                        employee_id = employee.id,
                         mac = form.mac.data,
                         device = form.device.data,
                         net = form.net.data)
@@ -240,8 +244,13 @@ def ip_delete(ID):
 def ip_update(ID):
     form = Ip()
     if form.validate_on_submit():
+        employee = models.employees.query.filter_by(name=form.user.data).first()
+        if employee is None:
+            flash('IP地址更新失败: 未找到员工 %s' % form.user.data)
+            return form.redirect()
+
         ip = models.ips.query.get(ID)
-        ip.user = form.user.data
+        ip.employee_id = employee.id
         ip.mac = form.mac.data
         ip.device = form.device.data
         try:

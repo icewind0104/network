@@ -5,6 +5,7 @@ class employees(db.Model):
     name = db.Column(db.String(64), nullable=False, unique=True)
     department = db.Column(db.String(64), nullable=False)
     assets = db.relationship('assets', backref='assets_user', lazy='dynamic')
+    ips = db.relationship('ips', backref='ips_user', lazy='dynamic', cascade="delete")
 
 class nets(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -28,8 +29,8 @@ class ips(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     addr = db.Column(db.Integer, nullable=False, unique=True)
     addr_str = db.Column(db.String(15), nullable=False)
-    user = db.Column(db.String(64), nullable=False)
     mac = db.Column(db.String(17), nullable=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
     device = db.Column(db.String(128), nullable=True)
     net = db.Column(db.Integer, db.ForeignKey('nets.id'), nullable=False)
     @property
@@ -62,4 +63,4 @@ class assets(db.Model):
     catagory = db.Column(db.String(32), nullable=False)
     name = db.Column(db.String(128), nullable=False)
     note = db.Column(db.String(64), nullable=True)
-    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), index=True, nullable=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)

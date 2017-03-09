@@ -65,10 +65,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for IP, net_name in IPs %}
-                    <tr class="uk-visible-hover-inline" id="{% if IP.user %}used{% endif %}">
+                {% for IP, net_name, employee_name in IPs %}
+                    <tr class="uk-visible-hover-inline" id="{% if IP.employee_name %}used{% endif %}">
                         <td id="addr" class="">{% if IP.addr_str %}{{ IP.addr_str|safe }}{% else %}{{ IP.addr_ntop }}{% endif %}</td>
-                        <td id="user" class="">{% if IP.user %}{{ IP.user|safe }}{% endif %}</td>
+                        <td id="user" class="">{% if IP.employee_name %}{{ IP.employee_name|safe }}{% endif %}</td>
                         <td id="mac" class="">{% if IP.mac %}{{ IP.mac|safe }}{% endif %}</td>
                         <td id="device" class="">{% if IP.device %}{{ IP.device|safe }}{% endif %}</td>
                         <td id="department" class="">{{ IP.net_name|safe }}</td>
@@ -76,9 +76,9 @@
                         <td  class="">
                             <!-- Operators -->
                             <div>
-                                {% if not IP.user %}<a id="{{IP.addr}}" class="success" href="#usebox" data-uk-modal><i class="uk-icon-user-plus"></i></a>{% endif %}
-                                {% if IP.user %}<a id="{{IP.id}}" class="modify" href="#modifybox" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>{% endif %}
-                                {% if IP.user %}<a id="{{IP.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-user-times"></i></a>{% endif %}
+                                {% if not IP.employee_name %}<a id="{{IP.addr}}" class="success" href="#usebox" data-uk-modal><i class="uk-icon-user-plus"></i></a>{% endif %}
+                                {% if IP.employee_name %}<a id="{{IP.id}}" class="modify" href="#modifybox" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>{% endif %}
+                                {% if IP.employee_name %}<a id="{{IP.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-user-times"></i></a>{% endif %}
                             </div>
                         </td>
                         {% endif %}
