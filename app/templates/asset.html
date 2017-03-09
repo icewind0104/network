@@ -69,10 +69,10 @@
         <li class="uk-nav-divider"></li>
         {% endif %}
 
-        <li class="{% if not catagory %}uk-active{% endif %}"><a  href="/asset/">所有</a></li>
-        <li class="{% if catagory == '显示器' %}uk-active{% endif %}"><a  href="/asset/?catagory=%e6%98%be%e7%a4%ba%e5%99%a8">显示器</a></li>
-        <li class="{% if catagory == '台式主机' %}uk-active{% endif %}"><a  href="/asset/?catagory=%e5%8f%b0%e5%bc%8f%e4%b8%bb%e6%9c%ba">台式主机</a></li>
-        <li class="{% if catagory == '其他' %}uk-active{% endif %}"><a  href="/asset/?catagory=%e5%85%b6%e4%bb%96">其他</a></li>
+        <li class="{% if not catagory %}uk-active{% endif %}"><a  href="{{prefix}}/asset/">所有</a></li>
+        <li class="{% if catagory == '显示器' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/?catagory=%e6%98%be%e7%a4%ba%e5%99%a8">显示器</a></li>
+        <li class="{% if catagory == '台式主机' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/?catagory=%e5%8f%b0%e5%bc%8f%e4%b8%bb%e6%9c%ba">台式主机</a></li>
+        <li class="{% if catagory == '其他' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/?catagory=%e5%85%b6%e4%bb%96">其他</a></li>
         <li class="uk-nav-divider"></li>
         <li><input id="filter_used" type="checkbox" {% if session['unused'] == True %}checked{% endif %}/>只显示未使用资产</li>
     </ul>
