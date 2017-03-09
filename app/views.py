@@ -149,6 +149,9 @@ def asset():
     Page = mylib.page(query.count(), max_list, curr_page)
     if curr_page < 1 or curr_page > Page.count:
         Page.curr_page = 1
+
+    # 排序
+    query = query.order_by(models.assets.id.desc())
     assets = query[(int(curr_page)-1)*max_list:(int(curr_page)-1)*max_list+max_list]
 
     # 渲染搜索结果
@@ -189,6 +192,9 @@ def employee():
     Page = mylib.page(query.count(), max_list, curr_page)
     if curr_page < 1 or curr_page > Page.count:
         Page.curr_page = 1
+
+    # 排序
+    query = query.order_by(models.employees.id.desc())
     employees = query[(int(curr_page)-1)*max_list:(int(curr_page)-1)*max_list+max_list]
 
     # 渲染搜索结果
