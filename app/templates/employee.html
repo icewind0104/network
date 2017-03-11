@@ -66,6 +66,7 @@
                     <tr style="background-image:linear-gradient(to bottom,#fff,#eee);">
                         <th class="">员工姓名</th>
                         <th class="">所在部门/项目组</th>
+                        <th class="">状态</th>
                         {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
                         <th class="">操作</th>
                         {% endif %}
@@ -76,6 +77,7 @@
                     <tr class="uk-visible-hover-inline" id="">
                         <td id="name" class="">{{ employee.name|safe }}</td>
                         <td id="department" class="">{{ employee.department|safe }}</td>
+                        <td id="status" class="">{%if employee.status==True %}在职{%elif employee.status==False %}离职{%else%}未知{%endif%}</td>
                         {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
                         <td  class="">
                             <!-- Operators -->
@@ -138,8 +140,11 @@
             <div class="uk-form-row"><label class="uk-form-label">员工姓名</label><div class="uk-form-controls">
                 {{ form.name }}
             </div></div>
-            <div class="uk-form-row"><label class="uk-form-label">所在部门</label><div class="uk-form-controls">
+            <div class="uk-form-row"><label class="uk-form-label">所在部门/项目组</label><div class="uk-form-controls">
                 {{ form.department }}
+            </div></div>
+            <div class="uk-form-row"><label class="uk-form-label">是否在职</label><div class="uk-form-controls">
+                {{ form.status }}
             </div></div>
             <div class="uk-modal-footer uk-text-right">
                 <button class="uk-button uk-modal-close" type="button">取消</button>
@@ -173,11 +178,12 @@
             <div class="uk-form-row"><label class="uk-form-label">员工姓名<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
                 {{ form.name }}
             </div></div>
-
             <div class="uk-form-row"><label class="uk-form-label">所在部门/项目组<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
                 {{ form.department }}
             </div></div>
-
+            <div class="uk-form-row"><label class="uk-form-label">是否在职</label><div class="uk-form-controls">
+                {{ form.status }}
+            </div></div>
             <div class="uk-modal-footer uk-text-right">
                 <button class="uk-button uk-modal-close" type="button">取消</button>
                 <button class="uk-button uk-button-primary" type="submit">确定</button>

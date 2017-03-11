@@ -42,7 +42,7 @@
                 //$("#modifybox #addr").val($(this).attr('id'));
                 $("#modifybox #name").val($(this).parent().parent().parent().find('td#name').text());
                 $("#modifybox #catagory").val($(this).parent().parent().parent().find('td#catagory').text());
-                $("#modifybox #employee_id").val($(this).parent().parent().parent().find('td#user').text());
+                $("#modifybox #employee_id").val($(this).parent().parent().parent().attr("data-employee-name"));
                 $("#modifybox #serial").val($(this).parent().parent().parent().find('td#serial').text());
                 $("#modifybox #note").val($(this).parent().parent().parent().find('td#note').text());
                 $("form#ipUpdate").attr("action", "{{prefix}}/assets/"+$(this).attr('id')+"/update/");
@@ -113,11 +113,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for  asset, employee_name in assets %}
-                    <tr class="uk-visible-hover-inline" id="{{asset.id}}">
+                {% for  asset, employee in assets %}
+                    <tr class="uk-visible-hover-inline" id="{{asset.id}}" data-employee-name="{{employee.name}}">
                         <td id="catagory" class="">{{ asset.catagory|safe }}</td>
                         <td id="name" class="">{{ asset.name|safe }}</td>
-                        <td id="user" class="">{% if asset.employee_name %}{{ asset.employee_name|safe }}{% elif employee_name %}{{ employee_name }}{% endif %}</td>
+                        <td id="user" class="">{% if asset.employee_name %}{{ asset.employee_name|safe }}{% elif employee.name %}{{ employee.name }}{% endif %}{% if employee.status == False %}&nbsp;(离职){% endif %}</td>
                         <td id="serial" class="">{% if asset.serial %}{{ asset.serial|safe }}{% endif %}</td>
                         <td id="note" class="">{% if asset.note %}{{ asset.note|safe }}{% endif %}</td>
                         {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}

@@ -11,6 +11,10 @@ class NeedSearchIdField(StringField):
         self.related_column = related_column
         StringField.__init__(self, *args, **kwargs)
 
+class BooleanSelectField(SelectField):
+    def __init__(self, *args, **kwargs):
+        SelectField.__init__(self, *args, **kwargs)
+
 class RedirectForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         FlaskForm.__init__(self, *args, **kwargs)
@@ -48,3 +52,4 @@ class Employee(RedirectForm):
     id = IntegerField('id', render_kw={'class':'uk-hidden'})
     name = StringField('name', validators=[DataRequired()], render_kw={'autocomplete': 'off'})
     department = StringField('department', validators=[DataRequired()], render_kw={'autocomplete': 'off'})
+    status = BooleanSelectField('status', choices=[('1', '在职'), ('0', '离职')])

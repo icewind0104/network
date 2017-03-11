@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from app import app, models, mylib, db, lm
 from flask import render_template, flash, redirect, url_for, g, request, session
-from app.forms import Net, Ip, Login, Asset, Employee
+from app.forms import Net, Ip, Login, Asset, Employee, BooleanSelectField
 from wtforms import StringField
 from sqlalchemy import or_
 from flask_login import login_required, login_user, logout_user, current_user
-import re, urllib
+import re, urllib, wtforms 
 
 prefix = app.config['MOUNT_POINT']
 
@@ -59,7 +59,7 @@ def index():
     # 获取IP列表
     IPs = []
     if search is not None:
-        IPs = db.session.query(models.ips, models.nets.name, models.employees.name).outerjoin(models.nets, models.employees
+        IPs = db.session.query(models.ips, models.nets.name, models.employees).outerjoin(models.nets, models.employees
         ).filter(or_(
             models.nets.name.contains(search),
             models.employees.name.contains(search),
@@ -67,18 +67,18 @@ def index():
             models.ips.device.contains(search),
             models.ips.addr_str.contains(search)
         )).all()
-        for ip, net_name, employee_name in IPs:
+        for ip, net_name, employee in IPs:
             ip.net_name = net_name.replace(search, '<span class="search">'+search+'</span>')
             ip.addr_str = ip.addr_str.replace(search, '<span class="search">'+search+'</span>')
             ip.mac = ip.mac.replace(search, '<span class="search">'+search+'</span>') if ip.mac else None
             ip.device = ip.device.replace(search, '<span class="search">'+search+'</span>') if ip.device else None
-            ip.employee_name = employee_name.replace(search, '<span class="search">'+search+'</span>')
+            ip.employee_name = employee.name.replace(search, '<span class="search">'+search+'</span>')
     if net_id is not None:
         net_id = int(net_id)
         form_ip.net.data = net_id
         curr_net = models.nets.query.get(net_id)
         if curr_net is not None:
-            res = db.session.query(models.ips, models.nets.name, models.employees.name).outerjoin(models.nets).outerjoin(models.employees
+            res = db.session.query(models.ips, models.nets.name, models.employees).outerjoin(models.nets).outerjoin(models.employees
             ).filter(
                 models.ips.addr.between(curr_net.ipstart, curr_net.ipend)
             ).order_by(
@@ -96,7 +96,7 @@ def index():
                 # 已使用的IP
                 else:
                     one_res[0].net_name = curr_net.name
-                    one_res[0].employee_name = one_res[2]
+                    one_res[0].employee_name = one_res[2].name
                     IPs.append(one_res)
                     one_res = res.pop(0)
 
@@ -110,7 +110,7 @@ def index():
 @app.route('/asset/', methods=['GET', 'POST'])
 def asset():
     max_list = 12
-    query = db.session.query(models.assets, models.employees.name).outerjoin(models.employees)
+    query = db.session.query(models.assets, models.employees).outerjoin(models.employees)
 
     # 过滤未使用的资产
     unused = request.args.get('unused', None)
@@ -138,7 +138,7 @@ def asset():
 
     form = Asset()
     if session.get('unused', False) == True:
-        query = query.filter(models.assets.employee_id == None)
+        query = query.filter(or_(models.assets.employee_id == None, models.employees.status == False))
 
     # 页码
     curr_page = request.args.get('page', None) or 1
@@ -156,8 +156,8 @@ def asset():
 
     # 渲染搜索结果
     if search is not None and search != '':
-        for asset, employee_name in assets:
-            asset.employee_name = employee_name.replace(search, '<span class="search">'+search+'</span>') if employee_name else None
+        for asset, employee in assets:
+            asset.employee_name = employee.name.replace(search, '<span class="search">'+search+'</span>') if employee_name else None
             asset.name = asset.name.replace(search, '<span class="search">'+search+'</span>') if asset.name else None
             asset.serial = asset.serial.replace(search, '<span class="search">'+search+'</span>') if asset.serial else None
             asset.note = asset.note.replace(search, '<span class="search">'+search+'</span>') if asset.note else None
@@ -374,6 +374,11 @@ def create_model_func(model, Form):
                     key = each.name
                     value = each.data
                     if value != '':
+                        if isinstance(each, BooleanSelectField):
+                            if value == '0':
+                                value = False
+                            if value == '1':
+                                value = True
                         if getattr(each, 'need_search_id', None):
                             rl_model = getattr(models, each.related_model)
                             related_model =  rl_model.query.filter_by(**{each.related_column:value}).first()
@@ -389,6 +394,8 @@ def create_model_func(model, Form):
                 db.session.commit()
             except:
                 flash('添加失败')
+        else:
+            flash('表单填写无效')
         return form.redirect()
     add.__name__ = model.__name__+'_add'
     app.route('/%s/add/' % model.__name__, methods=['GET', 'POST'])(add)
@@ -416,6 +423,11 @@ def create_model_func(model, Form):
                     key = each.name
                     value = each.data
                     if key != 'id' and value != '':
+                        if isinstance(each, BooleanSelectField):
+                            if value == '0':
+                                value = False
+                            if value == '1':
+                                value = True
                         if getattr(each, 'need_search_id', None):
                             rl_model = getattr(models, each.related_model)
                             related_model =  rl_model.query.filter_by(**{each.related_column:value}).first()
@@ -430,6 +442,8 @@ def create_model_func(model, Form):
             except:
                 db.session.rollback()
                 flash('更新失败')
+        else:
+            flash('表单填写无效')
         return form.redirect()
     update.__name__ = model.__name__+'update'
     app.route('/%s/<int:ID>/update/' % model.__name__, methods=['GET', 'POST'])(update)
