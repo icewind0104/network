@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from app import app, models, mylib, db, lm
 from flask import render_template, flash, redirect, url_for, g, request, session
-from app.forms import Net, Ip, Login, Asset, Employee, BooleanSelectField
+from app.forms import Net, Ip, Login, Asset, Employee, BooleanSelectField, NeedSearchIdField
 from wtforms import StringField
 from sqlalchemy import or_
 from flask_login import login_required, login_user, logout_user, current_user
@@ -157,7 +157,7 @@ def asset():
     # 渲染搜索结果
     if search is not None and search != '':
         for asset, employee in assets:
-            asset.employee_name = employee.name.replace(search, '<span class="search">'+search+'</span>') if employee_name else None
+            asset.employee_name = employee.name.replace(search, '<span class="search">'+search+'</span>') if employee else None
             asset.name = asset.name.replace(search, '<span class="search">'+search+'</span>') if asset.name else None
             asset.serial = asset.serial.replace(search, '<span class="search">'+search+'</span>') if asset.serial else None
             asset.note = asset.note.replace(search, '<span class="search">'+search+'</span>') if asset.note else None
@@ -379,7 +379,7 @@ def create_model_func(model, Form):
                                 value = False
                             if value == '1':
                                 value = True
-                        if getattr(each, 'need_search_id', None):
+                        elif isinstance(each, NeedSearchIdField):
                             rl_model = getattr(models, each.related_model)
                             related_model =  rl_model.query.filter_by(**{each.related_column:value}).first()
                             if related_model is None:
@@ -422,13 +422,15 @@ def create_model_func(model, Form):
                 if each.id != 'csrf_token':
                     key = each.name
                     value = each.data
-                    if key != 'id' and value != '':
-                        if isinstance(each, BooleanSelectField):
+                    if key != 'id':
+                        if value == '':
+                            value = None
+                        elif isinstance(each, BooleanSelectField):
                             if value == '0':
                                 value = False
                             if value == '1':
                                 value = True
-                        if getattr(each, 'need_search_id', None):
+                        elif isinstance(each, NeedSearchIdField):
                             rl_model = getattr(models, each.related_model)
                             related_model =  rl_model.query.filter_by(**{each.related_column:value}).first()
                             if related_model is None:

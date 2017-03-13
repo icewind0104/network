@@ -6,7 +6,6 @@ from flask import request, url_for, redirect
 
 class NeedSearchIdField(StringField):
     def __init__(self, *args, related_model, related_column, **kwargs):
-        self.need_search_id = True
         self.related_model = related_model
         self.related_column = related_column
         StringField.__init__(self, *args, **kwargs)
