@@ -48,15 +48,17 @@
                 <!-- left area -->
                 <div class="uk-width-1-5">
                     <!-- account bar -->
-                    {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
                     <div class="logout-box uk-panel uk-text-center uk-panel-box uk-margin-top uk-margin-bottom" style="border:1px dashed #bbb;">
                         <dl class="uk-description-list-line">
+                            {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
                             <dd id="netdesc">Hi!&nbsp;{{ current_user.username }}
                                 <span class="uk-margin-left">|</span><a href="{{prefix}}/logout/" class="uk-margin-left">登出</a>
                             </dd>
+                            {% else %}
+                            <dd><a href="{{prefix}}/login">管理员登录</a></dd>
+                            {% endif %}
                         </dl>
                     </div>
-                    {% endif %}
 
                     <!-- navigator -->
                     <ul class="uk-tab">
