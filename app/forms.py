@@ -38,7 +38,7 @@ class Ip(RedirectForm):
 class Login(FlaskForm):
     username = StringField('username', validators=[DataRequired()], render_kw={'class': 'uk-width-1-1 uk-form-large', 'placeholder': '登录名', 'autocomplete': 'off'})
     password = PasswordField('password', validators=[DataRequired()], render_kw={'class': 'uk-width-1-1 uk-form-large', 'placeholder': '密码', 'autocomplete': 'off'})
-    remember = BooleanField('remember')
+    remember = BooleanField('remember', default='y')
 
 class Asset(RedirectForm):
     id = IntegerField('id', render_kw={'class':'uk-hidden'})
