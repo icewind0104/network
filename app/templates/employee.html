@@ -48,10 +48,10 @@
             <div class="uk-flex-right uk-grid">
                 <div class="uk-width-1-2"></div>
                 <div class="uk-text-right uk-width-1-2">
-                <form class="uk-form" method="POST" action="{{prefix}}/employee/">
+                <form class="uk-form" method="GET" action="{{prefix}}/employee/">
                     <fieldset data-uk-margin>
                         <div class="uk-form-icon"><i class="uk-icon-search"></i>
-                        <input placeholder="search..." autocomplete="off" type="text" name="search" value="{% if search_key %}{{search_key}}{% endif %}">
+                        <input placeholder="search..." autocomplete="off" type="text" name="search" value="{% if search %}{{search}}{% endif %}">
                         <button class="uk-button mybutton">搜索</button></div>
                     </fieldset>
                 </form>
@@ -102,7 +102,7 @@
         {% if Page %}
         <ul class="uk-pagination uk-panel uk-panel-box" style="padding:15px;">
             {% if Page.previous_page %}
-                <li><a href="{{prefix}}/employee/{{ processor_generate_search(page=Page.previous_page, search=search) }}"><span><<</span></a></li>
+                <li><a href="{{ processor_generate_search(page=Page.previous_page, search=search) }}"><span><<</span></a></li>
             {% else %}
                 <li class="uk-disabled"><span>&lt;&lt;</span></li>
             {% endif %}
@@ -113,13 +113,13 @@
                     {% if p == Page.curr_page %}
                         <li class="uk-active"><span>{{p}}</span></li>
                     {% else %}
-                        <li><a href="{{prefix}}/employee/{{ processor_generate_search(page=p, search=search) }}">{{p}}</a></li>
+                        <li><a href="{{ processor_generate_search(page=p, search=search) }}">{{p}}</a></li>
                     {% endif %}
                 {% endif %}
             {% endfor %}
 
             {% if Page.next_page %}
-                <li><a href="{{prefix}}/employee/{{ processor_generate_search(page=Page.next_page, search=search) }}"><span>>></span></a></li>
+                <li><a href="{{ processor_generate_search(page=Page.next_page, search=search) }}"><span>>></span></a></li>
             {% else %}
                 <li class="uk-disabled"><span>&gt;&gt;</span></li>
             {% endif %}

@@ -25,11 +25,12 @@ def login():
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
+        is_remember = True if form.remember.data else False
         user = models.users.query.filter_by(username=username).first()
         if user is None or password != user.password:
             flash('用户名或密码错误')
         else:
-            login_user(user)
+            login_user(user, remember=is_remember)
             next = request.args.get('next')
             return redirect(next or url_for('index'))
     return render_template('login.html', form=form, prefix=prefix)
@@ -48,7 +49,7 @@ def logout():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     net_id = request.args.get('net', None)
-    search = request.form['search'] if request.method == 'POST' else None
+    search = request.args.get('search', None)
 
     form = Net()
     form_ip = Ip()
@@ -101,14 +102,14 @@ def index():
                     one_res = res.pop(0)
 
     # 渲染
-    return render_template('index.html', form=form, form_ip=form_ip, nets=Nets, currNetId=net_id, IPs=IPs, prefix=prefix)
+    return render_template('index.html', navi='ip', form=form, form_ip=form_ip, nets=Nets, currNetId=net_id, IPs=IPs, prefix=prefix, search=search)
 
 #--------------------------------------------
 #   Asset - /asset/
 #--------------------------------------------
 
-@app.route('/asset/', methods=['GET', 'POST'])
-def asset():
+@app.route('/asset/<string:catagory>/', methods=['GET', 'POST'])
+def asset(catagory):
     max_list = 12
     query = db.session.query(models.assets, models.employees).outerjoin(models.employees)
 
@@ -131,10 +132,14 @@ def asset():
         ))
 
     # 设置分类
-    catagory = request.args.get('catagory', None)
-    if catagory:
-        catagory = urllib.parse.unquote(catagory)
-        query = query.filter(models.assets.catagory == catagory)
+    if catagory != 'all':
+        List = {
+		    'display': '显示器',
+			'desktop': '台式主机',
+			'laptop': '笔记本电脑',
+			'other': '其他'
+		}
+        query = query.filter(models.assets.catagory == List[catagory])
 
     form = Asset()
     if session.get('unused', False) == True:
@@ -163,7 +168,7 @@ def asset():
             asset.note = asset.note.replace(search, '<span class="search">'+search+'</span>') if asset.note else None
             asset.catagory = asset.catagory.replace(search, '<span class="search">'+search+'</span>') if asset.catagory else None
 
-    return render_template('asset.html', prefix=prefix, assets=assets, form=form, catagory=catagory, Page=Page, search=search)
+    return render_template('asset.html', navi='asset', prefix=prefix, assets=assets, form=form, catagory=catagory, Page=Page, search=search)
 
 #--------------------------------------------
 #   Employee - /employee/
@@ -176,7 +181,7 @@ def employee():
     max_list = 12
 
     # 搜索
-    search = request.form['search'] if request.method == 'POST' else request.args.get('search', None)
+    search = request.args.get('search', None)
     if search is not None and search != '':
         query = query.filter(or_(
             models.employees.name.contains(search),
@@ -203,7 +208,7 @@ def employee():
             employee.name = employee.name.replace(search, '<span class="search">'+search+'</span>') if employee.name else None
             employee.department = employee.department.replace(search, '<span class="search">'+search+'</span>') if employee.department else None
 
-    return render_template('employee.html', prefix=prefix, employees=employees, form=form, Page=Page, search=search)
+    return render_template('employee.html', navi='employee', prefix=prefix, employees=employees, form=form, Page=Page, search=search)
 
 # --------ip--------
 @app.route('/ip/add/', methods=['GET', 'POST'])
@@ -273,7 +278,7 @@ def ip_update(ID):
 def net():
     form = Net()
     nets = models.nets.query.order_by(models.nets.ipstart).all()
-    return render_template('net.html', form=form, nets=nets, prefix=prefix)
+    return render_template('net.html', navi='ip', form=form, nets=nets, prefix=prefix)
 
 @app.route('/nets/add/', methods=['GET', 'POST'])
 @login_required
@@ -398,6 +403,8 @@ def create_model_func(model, Form):
             flash('表单填写无效')
         return form.redirect()
     add.__name__ = model.__name__+'_add'
+    # 装饰 @login_required
+    add = login_required(add)
     app.route('/%s/add/' % model.__name__, methods=['GET', 'POST'])(add)
 
     # 模板-删除记录
@@ -411,6 +418,8 @@ def create_model_func(model, Form):
             flash('删除失败')
         return form.redirect()
     delete.__name__ = model.__name__+'_delete'
+    # 装饰 @login_required
+    delete = login_required(delete)
     app.route('/%s/<int:ID>/delete/' % model.__name__, methods=['GET', 'POST'])(delete)
 
     # 模板-修改记录
@@ -448,6 +457,8 @@ def create_model_func(model, Form):
             flash('表单填写无效')
         return form.redirect()
     update.__name__ = model.__name__+'update'
+    # 装饰 @login_required
+    update = login_required(update)
     app.route('/%s/<int:ID>/update/' % model.__name__, methods=['GET', 'POST'])(update)
 
 create_model_func(models.assets, Asset)

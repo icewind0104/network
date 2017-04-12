@@ -38,10 +38,10 @@
             <div class="uk-flex-right uk-grid">
                 <div class="uk-width-1-2"></div>
                 <div class="uk-text-right uk-width-1-2">
-                <form class="uk-form" method="POST" action="{{prefix}}/">
+                <form class="uk-form" method="GET" action="{{prefix}}/">
                     <fieldset data-uk-margin>
                         <div class="uk-form-icon"><i class="uk-icon-search"></i>
-                        <input placeholder="search..." autocomplete="off" type="text" name="search" value="{% if search_key %}{{search_key}}{% endif %}">
+                        <input placeholder="search..." autocomplete="off" type="text" name="search" value="{% if search %}{{search}}{% endif %}">
                         <button class="uk-button mybutton">搜索</button></div>
                     </fieldset>
                 </form>
