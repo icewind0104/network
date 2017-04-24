@@ -27,8 +27,13 @@ class page():
     def __init__(self, row_count, per_list, curr_page):
         self.__row_count = row_count
         self.__per_list = per_list
-        self.curr_page = curr_page
         self.count = (self.__row_count + self.__per_list-1)//per_list
+        if (curr_page < 1):
+            self.curr_page = 1
+        elif (curr_page > self.count):
+            self.curr_page = self.count
+        else:
+            self.curr_page = curr_page
 
     @property
     def previous_page(self):

@@ -152,12 +152,10 @@ def asset(catagory):
     except:
         curr_page = 1
     Page = mylib.page(query.count(), max_list, curr_page)
-    if curr_page < 1 or curr_page > Page.count:
-        Page.curr_page = 1
 
     # 排序
     query = query.order_by(models.assets.id.desc())
-    assets = query[(int(curr_page)-1)*max_list:(int(curr_page)-1)*max_list+max_list]
+    assets = query[(int(Page.curr_page)-1)*max_list:(int(Page.curr_page)-1)*max_list+max_list]
 
     # 渲染搜索结果
     if search is not None and search != '':
@@ -195,12 +193,10 @@ def employee():
     except:
         curr_page = 1
     Page = mylib.page(query.count(), max_list, curr_page)
-    if curr_page < 1 or curr_page > Page.count:
-        Page.curr_page = 1
 
     # 排序
     query = query.order_by(models.employees.id.desc())
-    employees = query[(int(curr_page)-1)*max_list:(int(curr_page)-1)*max_list+max_list]
+    employees = query[(int(Page.curr_page)-1)*max_list:(int(Page.curr_page)-1)*max_list+max_list]
 
     # 渲染搜索结果
     if search is not None and search != '':
