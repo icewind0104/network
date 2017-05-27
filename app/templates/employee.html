@@ -7,7 +7,7 @@
         $("a.emplyMod").click(function(){
             //$("#modifybox #addr").val($(this).attr('id'));
             $("#modifybox #name").val($(this).parent().parent().parent().find('td#name').text());
-            $("#modifybox #department_id").val(this.dataset.depId
+            $("#modifybox #department_id").val(this.dataset.depId);
             $("form#emplyUpdate").attr("action", "{{prefix}}/employees/"+$(this).attr('id')+"/update/");
         });
 
