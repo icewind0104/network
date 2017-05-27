@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, BooleanField, PasswordField, IntegerField, TextAreaField, HiddenField, SelectField
+from wtforms import StringField, BooleanField, PasswordField, IntegerField, TextAreaField, HiddenField, SelectField, validators
 from wtforms.validators import DataRequired
 from urllib.parse import urlparse, urljoin
 from flask import request, url_for, redirect
@@ -51,5 +51,12 @@ class Asset(RedirectForm):
 class Employee(RedirectForm):
     id = IntegerField('id', render_kw={'class':'uk-hidden'})
     name = StringField('name', validators=[DataRequired()], render_kw={'autocomplete': 'off'})
-    department = StringField('department', validators=[DataRequired()], render_kw={'autocomplete': 'off'})
+    department_id = SelectField('department_id', coerce=int)
     status = BooleanSelectField('status', choices=[('1', '在职'), ('0', '离职')])
+
+class Department(RedirectForm):
+    id = IntegerField('id', render_kw={'class':'uk-hidden'})
+    name = StringField('name', validators=[DataRequired()], render_kw={'autocomplete': 'off'})
+    ipstart = StringField('ipstart', render_kw={'autocomplete': 'off'})
+    ipend = StringField('ipend', render_kw={'autocomplete': 'off'})
+    parent = StringField('parent', validators=[DataRequired()], render_kw={'autocomplete': 'off', 'class':'uk-hidden'})

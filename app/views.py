@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from app import app, models, mylib, db, lm
 from flask import render_template, flash, redirect, url_for, g, request, session
-from app.forms import Net, Ip, Login, Asset, Employee, BooleanSelectField, NeedSearchIdField
+from app.forms import Net, Ip, Login, Asset, Employee, Department, BooleanSelectField, NeedSearchIdField
 from wtforms import StringField
 from sqlalchemy import or_
 from flask_login import login_required, login_user, logout_user, current_user
-import re, urllib, wtforms 
+import re, urllib, wtforms, json
 
 prefix = app.config['MOUNT_POINT']
 
@@ -174,16 +174,28 @@ def asset(catagory):
 
 @app.route('/employee/', methods=['GET', 'POST'])
 def employee():
+    curr_dep_id = request.args.get('dep', None)
+    departments = models.departments.query.order_by(models.departments.name).all()
+    query = db.session.query(models.employees, models.departments.name).outerjoin(models.departments)
+    
     form = Employee()
-    query = models.employees.query
+    form.department_id.choices = [(r.id, r.name) for r in departments]
+    form_dep = Department()
+    
     max_list = 12
+    
+    # 限制部门
+    if curr_dep_id != None:
+        if curr_dep_id == '0':
+            query = query.filter(models.employees.department_id == None)
+        else:
+            query = query.filter(models.employees.department_id == int(curr_dep_id))
 
     # 搜索
     search = request.args.get('search', None)
     if search is not None and search != '':
         query = query.filter(or_(
-            models.employees.name.contains(search),
-            models.employees.department.contains(search),
+            models.employees.name.contains(search)
         ))
 
     # 页码
@@ -200,12 +212,81 @@ def employee():
 
     # 渲染搜索结果
     if search is not None and search != '':
-        for employee in employees:
+        for employee, deparment in employees:
             employee.name = employee.name.replace(search, '<span class="search">'+search+'</span>') if employee.name else None
-            employee.department = employee.department.replace(search, '<span class="search">'+search+'</span>') if employee.department else None
 
-    return render_template('employee.html', navi='employee', prefix=prefix, employees=employees, form=form, Page=Page, search=search)
-
+    return render_template('employee.html',
+        navi        = 'employee',
+        prefix      = prefix,
+        employees   = employees,
+        form        = form,
+        form_dep    = form_dep,
+        Page        = Page,
+        departments = departments,
+        curr_dep_id = curr_dep_id,
+        search      = search
+    )
+    
+@app.route('/departments/add/', methods=['GET', 'POST'])
+@login_required
+def department_add():
+    form = Department()
+    if form.validate_on_submit():
+        try:
+            parent = int(form.parent.data)
+        except Exception as e:
+            flash("创建部门失败 (parent值不是数字)")
+            return form.redirect()
+            
+        if parent == 0:
+            parent = None
+            
+        else:
+            if not models.departments.query.filter_by(id=parent).one_or_none():
+                flash('未找到对应的上级部门(部门ID:%s)' % parent)
+                return form.redirect()
+            
+        department = models.departments(
+            name = form.name.data,
+            parent = form.parent.data
+        )
+        db.session.add(department)
+        db.session.commit()
+        
+        return form.redirect()
+        
+@app.route('/departments/<int:id>/delete/')
+@login_required
+def department_delete(id):
+    sub_departments = models.departments.query.filter_by(parent=id).all()
+    if len(sub_departments) == 0:
+        try:
+            db.session.delete(models.departments.query.get(id))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(e)
+            flash('部门(ID:%d)删除失败' % id)
+    else:
+        flash('请先删除所有子部门')
+    return redirect(request.referrer)
+    
+@app.route('/departments/<int:id>/update/', methods=['GET', 'POST'])
+@login_required
+def department_update(id):
+    form = Department()
+    if form.validate_on_submit():
+        department = models.departments.query.get(id)
+        department.name = form.name.data
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(e)
+            flash('重命名部门失败')
+        
+        return form.redirect()
+    
 # --------ip--------
 @app.route('/ip/add/', methods=['GET', 'POST'])
 @login_required
@@ -357,14 +438,13 @@ def test_clean():
     else:
          return 'User not exist'
 
-from wtforms import StringField
 @app.route('/test/', methods=['GET', 'POST'])
 def test():
-    objs = db.session.query(models.employees).all()
-    form = Employee()
-    return render_template('test.html', form=form, objs=objs)
+    departments = models.departments.query.all()
+    form = Department()
+    return render_template('test.html', departments=departments, form=form)
 
-def create_model_func(model, Form):
+def create_model_func(model, Form, form_func=None):
     # 模板-添加记录
     def add():
         form = Form()
@@ -420,7 +500,10 @@ def create_model_func(model, Form):
 
     # 模板-修改记录
     def update(ID):
-        form = Form()
+        if form_func != None:
+            form = form_func(Form)
+        else:
+            form = Form()
         obj = model.query.get(ID)
         if obj is not None and form.validate_on_submit():
             for each in form:
@@ -456,9 +539,21 @@ def create_model_func(model, Form):
     # 装饰 @login_required
     update = login_required(update)
     app.route('/%s/<int:ID>/update/' % model.__name__, methods=['GET', 'POST'])(update)
+    
+# --------------- 自动生成数据库操作方法 ---------------
+# 自动生成3个数据库操作 URL:
+# add: /<model_name>/add/
+# update: /model_name/<primary_key>/update
+# delete: /model_name/<primary_key>/delete
+
+# 生成动态 selectfeild 内容，用于检测合法性
+def employee_form_func(form):
+    F = form()
+    F.department_id.choices = [(r.id, r.name) for r in models.departments.query.all()]
+    return F
+create_model_func(models.employees, Employee, form_func=employee_form_func)
 
 create_model_func(models.assets, Asset)
-create_model_func(models.employees, Employee)
 
 # ---------------[ Test END ]---------------
 

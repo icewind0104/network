@@ -1,23 +1,95 @@
 <html>
-<head></head>
-<body>
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-    {% for catagory, message in messages %}
-        {{ message }}
-    {% endfor %}
-{% endif %}
-{% endwith %}
-	<form action="/employees/add/" method="POST">
-	{{ form.hidden_tag() }}
-		name: {{ form.name }}<br>
-		department: {{ form.department }}<br>
-		<input type="submit" value="ok"/>
-	</form>
-	<ul>
-		{% for obj in objs %}
-		<li>{{ obj.id }}-{{ obj.name}}-{{ obj.user }}<a href="/employees/{{ obj.id }}/delete/">删除</a></li>
-		{% endfor %}
-	</ul>
-</body>
+    <head>
+    </head>
+    <body>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                <div class="uk-container-center uk-text-center uk-alert uk-alert-danger uk-width-1-2" data-uk-alert>
+                    错误<span class="uk-margin-left">{{ message }}</span>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}  
+        <form action="{{prefix}}/departments/add/" method="POST">
+            {{ form.hidden_tag() }}
+            部门名称{{form.name}}{% for error in form.name.errors %}{{ error }}{% endfor %}
+            上级部门{{form.parent}}{% for error in form.parent.errors %}{{ error }}{% endfor %}
+            排列顺序{{form.sequence}}{% for error in form.sequence.errors %}{{ error }}{% endfor %}
+            <br>
+            <input type="submit"/>
+        </form>
+        
+        <div class="departments">
+        </div>
+        
+    </body>
+    
+    <script>
+        !function(){
+            var listBox = document.getElementsByClassName('list')[0];
+            var inputParent = document.getElementById('parent');
+            
+			if (typeof(listBox) == 'null') {
+				listBox.addEventListener("click", function(event){
+					if (event.target.classList.contains('childDep')){
+						event.preventDefault();
+						inputParent.value = event.target.dataset.parent;
+					}
+				}, false);
+			}
+        }()
+		
+		!function(){
+			var departments = []
+            departments = [
+		    {%- for department in departments -%}
+				{id:{{department.id}},name:'{{department.name}}',parent_id:{% if department.parent %}{{department.parent}}{% else %}0{% endif %},sequence:{{department.sequence}}},
+			{% endfor -%}
+            ];
+			
+            var fragment = document.createDocumentFragment();
+            /*function x(container, list, parent){
+                var hasChild = false;
+                for(var i=0; i<list.length; i++){
+                    if(list[i].parent_id == parent) {
+                        if (hasChild == false) {
+                            var ul = document.createElement("UL");
+                            container.appendChild(ul);
+                            hasChild = true;
+                        }
+                        var li = document.createElement("li")
+                        li.appendChild(document.createTextNode(list[i].name));
+                        ul.appendChild(li);
+                        x(ul, list, list[i].id);
+                    }
+                }
+            }*/
+            
+            function x(container, parent_id){
+                var deps = []   //当前部门的下级部门集合
+                for (var i=0; i<departments.length; i++){
+                    if(departments[i].parent_id == parent_id){
+                        deps.push(departments.splice(i,1)[0]);
+                        i--;
+                    }
+                }
+                if (deps.length>0){
+                    var ul = document.createElement("UL");
+                    container.appendChild(ul);
+                    
+                    for (i=0; i<deps.length; i++){
+                        var li = document.createElement("LI");
+                        li.appendChild(document.createTextNode(deps[i].id+deps[i].name+deps[i].sequence));
+                        ul.appendChild(li);
+                        x(ul, deps[i].id);
+                    }
+                }
+            }
+            
+            x(fragment, 0);
+            var departmentBox = document.getElementsByClassName('departments')[0];
+            departmentBox.appendChild(fragment);
+		}()
+    </script>
 </html>

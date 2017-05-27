@@ -3,29 +3,118 @@
 {% block head %}
 <script type="text/javascript">
     $('document').ready(function(){
-        //alert('hello world!')
-        $("a.success").click(
-            function(){
-                $("#usebox #addr").val($(this).attr('id'));
-                $("form#ipAdd").attr("action", "{{prefix}}/ip/add/");
-            });
 
-        $("a.modify").click(
-            function(){
-                //$("#modifybox #addr").val($(this).attr('id'));
-                $("#modifybox #name").val($(this).parent().parent().parent().find('td#name').text());
-                $("#modifybox #department").val($(this).parent().parent().parent().find('td#department').text());
-                $("form#ipUpdate").attr("action", "{{prefix}}/employees/"+$(this).attr('id')+"/update/");
-            });
+        $("a.emplyMod").click(function(){
+            //$("#modifybox #addr").val($(this).attr('id'));
+            $("#modifybox #name").val($(this).parent().parent().parent().find('td#name').text());
+            $("form#emplyUpdate").attr("action", "{{prefix}}/employees/"+$(this).attr('id')+"/update/");
+        });
 
-        $("a.danger").click(
-            function(){
-                $("#deletebox").find(".motion").text(
-                    $(this).parent().parent().parent().find("#name").text()
-                );
-                $("form#ipDelete").attr("action", "{{prefix}}/employees/"+$(this).attr('id')+"/delete/");
-            });
+        $("a.emplyDel").click(function(){
+            $("#deletebox").find(".motion").text(
+                $(this).parent().parent().parent().find("#name").text()
+            );
+            $("form#emplyDelete").attr("action", "{{prefix}}/employees/"+$(this).attr('id')+"/delete/");
+        });
+        
+        // 生成组织树状结构
+        var struct = {}; //用来保存树状组织架构的对象
+        !function(){
+			var departments = []
+            departments = [
+		    {%- for department in departments -%}
+				{id:{{department.id}},name:'{{department.name}}',parent_id:{% if department.parent %}{{department.parent}}{% else %}0{% endif %},ipStart:{% if department.ipstart %}{{department.ipstart}}{% else %}0{% endif %},ipEnd:{% if department.ipend %}{{department.ipend}}{% else %}0{% endif %}},
+			{% endfor -%}
+            ];
+			
+            function Sort(a,b){
+                return a.ipStart - b.ipStart;
+            }
+            
+            var fragment = document.createDocumentFragment();
+            function x(struct, parent_id){
+                var deps = [];          //当前部门的下级部门集合
+                for (var i=0; i<departments.length; i++){
+                    if(departments[i].parent_id == parent_id){
+                        deps.push(departments.splice(i,1)[0]);
+                        i--;
+                    }
+                }
+                
+                if (deps.length>0){
+                    deps.sort(Sort);
+                    struct.children = deps;
+                    
+                    for (i=0; i<deps.length; i++){
+                        x(deps[i], deps[i].id);
+                    }
+                }
+            }
+            
+            x(struct, 0);
+		}()
+        
+        //解析树状组织结构到左侧部门栏
+        !function(){
+            var currDepId = {% if curr_dep_id %}{{curr_dep_id}}{% else %}0{% endif %};
+            var fragment = document.createDocumentFragment();
+            function x(struct, container){
+                if(typeof(struct.children) != 'undefined'){
+                    var ul = document.createElement("UL");
+                    container.appendChild(ul);
+                    for (var i=0; i<struct.children.length; i++){
+                        var li = document.createElement("LI");
+                        if (struct.children[i].id == currDepId){
+                            li.classList.add("active");
+                        }
+                        li.innerHTML = struct.children[i].name+
+                            "<span class='hidden'><a class='modify depUpdate' id='"+struct.children[i].id+"' data-name="+struct.children[i].name+" href='#depUpdate' data-uk-modal><i class='uk-icon-pencil-square-o'></i></a>"+
+                            "<a class='danger depDel' id='"+struct.children[i].id+"' data-name="+struct.children[i].name+" href='#depDelete' data-uk-modal><i class='uk-icon-times-circle'></i></a></span>";
 
+                        var a = document.createElement("A");
+                        a.classList.add("li");
+                        a.href = "{{prefix}}/employee/?dep="+struct.children[i].id;
+                        
+                        a.appendChild(li);
+                        ul.appendChild(a);
+                        x(struct.children[i], ul);
+                    }
+                }
+            }
+            x(struct, fragment);
+            $("#departments #list").append(fragment);
+            
+            //添加部门编辑功能
+            $("a.depAdd").click(function(){
+                $("form#formDepartmentAdd #parent").val(currDepId);
+            });
+            
+            $("a.depDel").click(function(){
+                $("form#formDepartmentDelete").attr("action", "{{prefix}}/departments/"+$(this).attr('id')+"/delete/");
+                $("form#formDepartmentDelete .motion").text(this.dataset.name);
+            });
+        
+            $("a.depUpdate").click(function(){
+                $("form#formDepartmentUpdate").attr("action", "{{prefix}}/departments/"+$(this).attr('id')+"/update/");
+                $("form#formDepartmentUpdate #name").val(this.dataset.name);
+            });
+            
+            $("#departments a.li").mouseenter(function(event){
+                var li = this.children[0];
+                li.classList.add("select");
+                var span = li.children[0];
+                span.classList.remove("hidden");
+                span.classList.add("visible");
+            });
+            
+            $("#departments a.li").mouseleave(function(event){
+                var li = this.children[0];
+                li.classList.remove("select");
+                var span = li.children[0];
+                span.classList.remove("visible");
+                span.classList.add("hidden");
+            });
+        }();
     });
 </script>
 {% endblock %}
@@ -36,9 +125,32 @@
         <li>
             <a href="#netaddbox" data-uk-modal><i class="uk-icon-plus-square"></i>&nbsp新增员工</a>
         </li>
+        {% if curr_dep_id == '0' %}
+        <li>
+            <a class="disabled depAdd" href="#"><i class="uk-icon-plus-square"></i>&nbsp添加下级部门</a>
+        </li>
+        {% else %}
+        <li>
+            <a class="depAdd" href="#depAdd" data-uk-modal><i class="uk-icon-plus-square"></i>&nbsp添加下级部门</a>
+        </li>
+        {% endif %}
         <li class="uk-nav-divider"></li>
         {% endif %}
     </ul>
+    
+    <div id="departments">
+        <a href="{{prefix}}/employee/" class="li">
+            <li {% if curr_dep_id == None %}class="active"{% endif %}>零壹移动互联<span></span></li>
+        </a>
+        
+        <div id="list">
+            <!-- department list -->
+        </div>
+        
+        <a href="{{prefix}}/employee/?dep=0" class="li">
+            <li {% if curr_dep_id == '0' %}class="active"{% endif %}>未指定部门的员工<span></span></li>
+        </a>
+    </div>
 {% endblock %}
 
 {% block right %}
@@ -73,17 +185,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for employee in employees %}
+                {% for employee, department in employees %}
                     <tr class="uk-visible-hover-inline" id="">
                         <td id="name" class="">{{ employee.name|safe }}</td>
-                        <td id="department" class="">{{ employee.department|safe }}</td>
+                        <td id="department" class="">{% if department == None %}未指定{% else %}{{ department }}{% endif %}</td>
                         <td id="status" class="">{%if employee.status==True %}在职{%elif employee.status==False %}离职{%else%}未知{%endif%}</td>
                         {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
                         <td  class="">
                             <!-- Operators -->
                             <div>
-                                <a id="{{employee.id}}" class="modify" href="#modifybox" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
-                                <a id="{{employee.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-times-circle"></i></a>
+                                <a id="{{employee.id}}" class="modify emplyMod" href="#modifybox" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
+                                <a id="{{employee.id}}" class="danger emplyDel" href="#deletebox" data-uk-modal><i class="uk-icon-times-circle"></i></a>
                             </div>
                         </td>
                         {% endif %}
@@ -131,17 +243,18 @@
 {% endblock %}
 
 {% block windows %}
+<form></form>
 {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
-<form action="" id="ipUpdate" class="uk-form uk-form-horizontal" method="POST">
+<form action="" id="emplyUpdate" class="uk-form uk-form-horizontal" method="POST">
     {{ form.hidden_tag() }}
     <div id="modifybox" class="uk-modal">
         <div class="uk-modal-dialog">
-            <div class="uk-modal-header uk-grid"><i class="uk-icon-pencil-square-o uk-icon-medium" style="color:#07d;"></i><h2>修改使用人</h2></div>
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-pencil-square-o uk-icon-medium" style="color:#07d;"></i><h2>修改员工信息</h2></div>
             <div class="uk-form-row"><label class="uk-form-label">员工姓名</label><div class="uk-form-controls">
                 {{ form.name }}
             </div></div>
             <div class="uk-form-row"><label class="uk-form-label">所在部门/项目组</label><div class="uk-form-controls">
-                {{ form.department }}
+                {{ form.department_id }}
             </div></div>
             <div class="uk-form-row"><label class="uk-form-label">是否在职</label><div class="uk-form-controls">
                 {{ form.status }}
@@ -153,10 +266,10 @@
         </div>
     </div>
 </form>
-<form action="" id="ipDelete" class="uk-form" method="POST">
+<form action="" id="emplyDelete" class="uk-form" method="POST">
     <div id="deletebox" class="uk-modal">
         <div class="uk-modal-dialog">
-            <div class="uk-modal-header uk-grid"><i class="uk-icon-times-circle uk-icon-medium" style="color:#f00;"></i><h2>删除IP地址</h2></div>
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-times-circle uk-icon-medium" style="color:#f00;"></i><h2>删除员工</h2></div>
             确定删除&nbsp;<span class="motion"></span>&nbsp;吗？
             <input type="text" class="uk-hidden" name="ip_id" id="delete_ip_id">
             <input type="text" class="uk-hidden" name="operate" value="delete">
@@ -173,13 +286,13 @@
 
     <div id="netaddbox" class="uk-modal">
         <div class="uk-modal-dialog">
-            <div class="uk-modal-header uk-grid"><i class="uk-icon-plus uk-icon-medium" style="color:#8CC14C;"></i><h2>添加新网络</h2></div>
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-plus uk-icon-medium" style="color:#8CC14C;"></i><h2>添加新员工</h2></div>
 
             <div class="uk-form-row"><label class="uk-form-label">员工姓名<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
                 {{ form.name }}
             </div></div>
             <div class="uk-form-row"><label class="uk-form-label">所在部门/项目组<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
-                {{ form.department }}
+                {{ form.department_id }}
             </div></div>
             <div class="uk-form-row"><label class="uk-form-label">是否在职</label><div class="uk-form-controls">
                 {{ form.status }}
@@ -191,5 +304,57 @@
         </div>
     </div>
 </form>
+
+<form action="" id="formDepartmentDelete" class="uk-form" method="get">
+    <div id="depDelete" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-times-circle uk-icon-medium" style="color:#f00;"></i><h2>删除IP地址</h2></div>
+            确定删除&nbsp;<span class="motion"></span>&nbsp;吗？
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-danger">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<form id="formDepartmentAdd" action="{{prefix}}/departments/add/" class="uk-form uk-form-horizontal" method="POST">
+    {{ form_dep.hidden_tag() }}
+    <div id="depAdd" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-plus uk-icon-medium" style="color:#8CC14C;"></i><h2>增加下级部门</h2></div>
+            <div class="uk-form-row">
+                <label class="uk-form-label">部门名字<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                {{ form_dep.name }}
+                </div>
+            </div>
+            {{ form_dep.parent }}
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-primary" type="submit">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<form action="" id="formDepartmentUpdate" class="uk-form uk-form-horizontal" method="POST">
+    {{ form_dep.hidden_tag() }}
+    <div id="depUpdate" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-pencil-square-o uk-icon-medium" style="color:#07d;"></i><h2>重命名部门</h2></div>
+            <div class="uk-form-row">
+                <label class="uk-form-label">部门名字<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                {{ form_dep.name }}
+                </div>
+            </div>
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-primary" type="submit">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+
 {% endif %}
 {% endblock %}

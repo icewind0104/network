@@ -1,9 +1,17 @@
 from app import db, mylib
 
+class departments(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False)
+    ipstart = db.Column(db.Integer)
+    ipend = db.Column(db.Integer)
+    parent = db.Column(db.Integer, db.ForeignKey('departments.id', ondelete="CASCADE"), nullable=True)
+    employees = db.relationship('employees', backref='department', lazy='dynamic')
+
 class employees(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False, unique=True)
-    department = db.Column(db.String(64), nullable=False)
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id', ondelete='SET NULL'), nullable=True)
     status = db.Column(db.Boolean)
     assets = db.relationship('assets', backref='assets_user', lazy='dynamic')
     ips = db.relationship('ips', backref='ips_user', lazy='dynamic', cascade="delete")
