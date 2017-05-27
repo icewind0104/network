@@ -59,4 +59,4 @@ class Department(RedirectForm):
     name = StringField('name', validators=[DataRequired()], render_kw={'autocomplete': 'off'})
     ipstart = StringField('ipstart', render_kw={'autocomplete': 'off'})
     ipend = StringField('ipend', render_kw={'autocomplete': 'off'})
-    parent = StringField('parent', validators=[DataRequired()], render_kw={'autocomplete': 'off', 'class':'uk-hidden'})
+    parent = StringField('parent', render_kw={'autocomplete': 'off', 'class':'uk-hidden'})

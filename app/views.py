@@ -283,9 +283,11 @@ def department_update(id):
         except Exception as e:
             db.session.rollback()
             print(e)
-            flash('重命名部门失败')
+            flash('重命名部门失败: 数据库更新失败')
+    else:
+        flash("重命名部门失败: 表单无效")
         
-        return form.redirect()
+    return form.redirect()
     
 # --------ip--------
 @app.route('/ip/add/', methods=['GET', 'POST'])
