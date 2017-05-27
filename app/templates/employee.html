@@ -7,6 +7,7 @@
         $("a.emplyMod").click(function(){
             //$("#modifybox #addr").val($(this).attr('id'));
             $("#modifybox #name").val($(this).parent().parent().parent().find('td#name').text());
+            $("#modifybox #department_id").val(this.dataset.depId
             $("form#emplyUpdate").attr("action", "{{prefix}}/employees/"+$(this).attr('id')+"/update/");
         });
 
@@ -194,7 +195,7 @@
                         <td  class="">
                             <!-- Operators -->
                             <div>
-                                <a id="{{employee.id}}" class="modify emplyMod" href="#modifybox" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
+                                <a id="{{employee.id}}" data-depId="{{employee.department_id}}" class="modify emplyMod" href="#modifybox" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
                                 <a id="{{employee.id}}" class="danger emplyDel" href="#deletebox" data-uk-modal><i class="uk-icon-times-circle"></i></a>
                             </div>
                         </td>
