@@ -51,7 +51,7 @@ class Asset(RedirectForm):
 class Employee(RedirectForm):
     id = IntegerField('id', render_kw={'class':'uk-hidden'})
     name = StringField('name', validators=[DataRequired()], render_kw={'autocomplete': 'off'})
-    department_id = SelectField('department_id', coerce=int)
+    department_id = SelectField('department_id')
     status = BooleanSelectField('status', choices=[('1', '在职'), ('0', '离职')])
 
 class Department(RedirectForm):

@@ -179,7 +179,8 @@ def employee():
     query = db.session.query(models.employees, models.departments.name).outerjoin(models.departments)
     
     form = Employee()
-    form.department_id.choices = [(r.id, r.name) for r in departments]
+    form.department_id.choices = [('', '未指定')]
+    form.department_id.choices.extend([(str(r.id), r.name) for r in departments])
     form_dep = Department()
     
     max_list = 12
@@ -449,7 +450,10 @@ def test():
 def create_model_func(model, Form, form_func=None):
     # 模板-添加记录
     def add():
-        form = Form()
+        if form_func != None:
+            form = form_func(Form)
+        else:
+            form = Form()
         if form.validate_on_submit():
             kw = {}
             for each in form:
@@ -506,36 +510,45 @@ def create_model_func(model, Form, form_func=None):
             form = form_func(Form)
         else:
             form = Form()
+        # 检查被更新记录是否存在
         obj = model.query.get(ID)
-        if obj is not None and form.validate_on_submit():
-            for each in form:
-                if each.id != 'csrf_token':
-                    key = each.name
-                    value = each.data
-                    if key != 'id':
-                        if value == '':
-                            value = None
-                        elif isinstance(each, BooleanSelectField):
-                            if value == '0':
-                                value = False
-                            if value == '1':
-                                value = True
-                        elif isinstance(each, NeedSearchIdField):
-                            rl_model = getattr(models, each.related_model)
-                            related_model =  rl_model.query.filter_by(**{each.related_column:value}).first()
-                            if related_model is None:
-                                flash('修改失败')
-                                return form.redirect()
-                            else:
-                                value = related_model.id
-                        setattr(obj, key, value)
-            try:
-                db.session.commit()
-            except:
-                db.session.rollback()
-                flash('更新失败')
+        if obj is not None:
+            if form.validate_on_submit():
+                for each in form:
+                    if each.id != 'csrf_token':
+                        key = each.name
+                        value = each.data
+                        if key != 'id':
+                            if value == '':
+                                value = None
+                            elif isinstance(each, BooleanSelectField):
+                                if value == '0':
+                                    value = False
+                                if value == '1':
+                                    value = True
+                            elif isinstance(each, NeedSearchIdField):
+                                rl_model = getattr(models, each.related_model)
+                                related_model =  rl_model.query.filter_by(**{each.related_column:value}).first()
+                                if related_model is None:
+                                    flash('修改失败')
+                                    return form.redirect()
+                                else:
+                                    value = related_model.id
+                            setattr(obj, key, value)
+                try:
+                    db.session.commit()
+                except:
+                    db.session.rollback()
+                    flash('更新失败')
+            else:
+                # 后台打印表单无效的原因
+                flash('表单填写无效')
+                print(form.department_id.choices)
+                for each in form:
+                    for error in each.errors:
+                        print('[Warnning] Form submit failed: %s - %s' % (each.name, error))
         else:
-            flash('表单填写无效')
+            flash('更新失败: 未找到 ID:%d 对映的记录' % ID)
         return form.redirect()
     update.__name__ = model.__name__+'update'
     # 装饰 @login_required
@@ -551,7 +564,8 @@ def create_model_func(model, Form, form_func=None):
 # 生成动态 selectfeild 内容，用于检测合法性
 def employee_form_func(form):
     F = form()
-    F.department_id.choices = [(r.id, r.name) for r in models.departments.query.all()]
+    F.department_id.choices = [('', '未指定')]
+    F.department_id.choices.extend([(str(r.id), r.name) for r in models.departments.query.all()])
     return F
 create_model_func(models.employees, Employee, form_func=employee_form_func)
 
