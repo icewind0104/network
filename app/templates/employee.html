@@ -21,18 +21,22 @@
         // 生成组织树状结构
         var struct = {}; //用来保存树状组织架构的对象
         !function(){
-			var departments = []
-            departments = [
+            // 初始化所有部门
+            var departments = [
 		    {%- for department in departments -%}
 				{id:{{department.id}},name:'{{department.name}}',parent_id:{% if department.parent %}{{department.parent}}{% else %}0{% endif %},ipStart:{% if department.ipstart %}{{department.ipstart}}{% else %}0{% endif %},ipEnd:{% if department.ipend %}{{department.ipend}}{% else %}0{% endif %}},
 			{% endfor -%}
             ];
 			
+            // 排序函数
             function Sort(a,b){
                 return a.ipStart - b.ipStart;
             }
             
+            // 将部门列表组织为树形对象，每个对象的 children 属性保存下级部门数组
             var fragment = document.createDocumentFragment();
+            
+            // 递归解析部门数组的函数
             function x(struct, parent_id){
                 var deps = [];          //当前部门的下级部门集合
                 for (var i=0; i<departments.length; i++){
@@ -41,18 +45,17 @@
                         i--;
                     }
                 }
-                
-                if (deps.length>0){
-                    deps.sort(Sort);
-                    struct.children = deps;
-                    
-                    for (i=0; i<deps.length; i++){
-                        x(deps[i], deps[i].id);
-                    }
+                deps.sort(Sort);
+                struct.children = deps;  
+                for (i=0; i<deps.length; i++){
+                    x(deps[i], deps[i].id);
                 }
             }
             
+            // 生成树状组织结构并保存到 struct 中
             x(struct, 0);
+            console.log(struct);
+            
 		}()
         
         //解析树状组织结构到左侧部门栏
@@ -60,31 +63,50 @@
             var currDepId = {% if curr_dep_id %}{{curr_dep_id}}{% else %}0{% endif %};
             var fragment = document.createDocumentFragment();
             function x(struct, container){
-                if(typeof(struct.children) != 'undefined'){
-                    var ul = document.createElement("UL");
-                    ul.classList.add("hidden");
-                    container.appendChild(ul);
-                    for (var i=0; i<struct.children.length; i++){
-                        var li = document.createElement("LI");
-                        if (struct.children[i].id == currDepId){
-                            li.classList.add("active");
-                        }
-                        li.innerHTML = struct.children[i].name+
-                            "<span class='hidden'><a class='modify depUpdate' id='"+struct.children[i].id+"' data-name="+struct.children[i].name+" href='#depUpdate' data-uk-modal><i class='uk-icon-pencil-square-o'></i></a>"+
-                            "<a class='danger depDel' id='"+struct.children[i].id+"' data-name="+struct.children[i].name+" href='#depDelete' data-uk-modal><i class='uk-icon-times-circle'></i></a></span>";
-
-                        var a = document.createElement("A");
-                        a.classList.add("li");
-                        a.href = "{{prefix}}/employee/?dep="+struct.children[i].id;
-                        
-                        a.appendChild(li);
-                        ul.appendChild(a);
+                for (var i=0; i<struct.children.length; i++){
+                    var li = document.createElement("LI");
+                    if (struct.children[i].id == currDepId){
+                        li.classList.add("active");
+                    }
+                    li.innerHTML = "<a class='name' href={{prefix}}/employee/?dep="+struct.children[i].id+">"+struct.children[i].name+"</a>"+
+                        "<span class='operator hidden'><a class='modify depUpdate' id='"+struct.children[i].id+"' data-name="+struct.children[i].name+" href='#depUpdate' data-uk-modal><i class='uk-icon-pencil-square-o'></i></a>"+
+                        "<a class='danger depDel' id='"+struct.children[i].id+"' data-name="+struct.children[i].name+" href='#depDelete' data-uk-modal><i class='uk-icon-times-circle'></i></a></span>";
+                    container.appendChild(li);
+                    
+                    if (struct.children[i].children.length > 0) {   //该部门存在下级部门
+                        var I = document.createElement("I");
+                        I.classList.add("uk-icon-caret-right");
+                        I.classList.add("dropdown");
+                        li.insertBefore(I, li.children[0]);
+                    
+                        var ul = document.createElement("UL");
+                        ul.classList.add("hidden");
+                        container.appendChild(ul);
                         x(struct.children[i], ul);
+                    } else {
+                        var I = document.createElement("I");
+                        I.classList.add("uk-icon-caret-right");
+                        I.classList.add("hidden");
+                        li.insertBefore(I, li.children[0]);
                     }
                 }
             }
             x(struct, fragment);
             $("#departments #list").append(fragment);
+            
+            //折叠\展开下级部门
+            $("div#departments div#list i.dropdown").click(function(){
+                var ul = this.parentNode.nextSibling;
+                if (ul.classList.contains("hidden")) {
+                    this.classList.remove("uk-icon-caret-right");
+                    this.classList.add("uk-icon-caret-down");
+                    ul.classList.remove("hidden");
+                } else {
+                    this.classList.remove("uk-icon-caret-down");
+                    this.classList.add("uk-icon-caret-right");
+                    ul.classList.add("hidden");
+                }
+            })
             
             //添加部门编辑功能
             $("a.depAdd").click(function(){
@@ -101,20 +123,14 @@
                 $("form#formDepartmentUpdate #name").val(this.dataset.name);
             });
             
-            $("#departments a.li").mouseenter(function(event){
-                var li = this.children[0];
-                li.classList.add("select");
-                var span = li.children[0];
-                span.classList.remove("hidden");
-                span.classList.add("visible");
+            $("#departments div#list li").mouseenter(function(event){
+                this.classList.add("select");
+                this.children[2].classList.remove("hidden");
             });
             
-            $("#departments a.li").mouseleave(function(event){
-                var li = this.children[0];
-                li.classList.remove("select");
-                var span = li.children[0];
-                span.classList.remove("visible");
-                span.classList.add("hidden");
+            $("#departments div#list li").mouseleave(function(event){
+                this.classList.remove("select");
+                this.children[2].classList.add("hidden");
             });
         }();
     });

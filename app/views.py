@@ -483,6 +483,9 @@ def create_model_func(model, Form, form_func=None):
                 flash('添加失败')
         else:
             flash('表单填写无效')
+            for each in form:
+                for error in each.errors:
+                    print('[Warnning] Form submit failed: %s - %s' % (each.name, error))
         return form.redirect()
     add.__name__ = model.__name__+'_add'
     # 装饰 @login_required
@@ -543,7 +546,6 @@ def create_model_func(model, Form, form_func=None):
             else:
                 # 后台打印表单无效的原因
                 flash('表单填写无效')
-                print(form.department_id.choices)
                 for each in form:
                     for error in each.errors:
                         print('[Warnning] Form submit failed: %s - %s' % (each.name, error))
