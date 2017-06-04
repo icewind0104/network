@@ -95,3 +95,38 @@ td span{
 a.button:hover{
     text-decoration: none;
 }
+
+/*--- 部门栏 开始 ---*/
+#departments a{
+    text-decoration: none;
+}
+#departments ul{
+    padding-left: 10px;
+    margin: 0;
+}
+#departments li{
+    padding: 5px;
+    list-style-type: none;
+    color: #000;
+}
+#departments li a.name{color: #000;}
+#departments li i.hidden{visibility: hidden;}
+#departments li i{padding: 0 5px 0 5px;}
+#departments li span{margin: 0 0 0 10px;}
+#departments li span.hidden{visibility: hidden;}
+#departments li span.operator i{margin: 0 0 0 5px; padding: 0 0 0 0;}
+#departments li.select{background-color: #eee;}
+#departments li.active{background-color: #00a5e6; color: #fff;}
+#departments li.active a{color: #fff;}
+
+#departments ul.hidden {
+    visibility: hidden;
+    height: 0px;
+    overflow: hidden;
+}
+/*--- 部门栏 结束 ---*/
+
+.uk-nav-side>li>a.disabled{
+    color: #bbb;
+    cursor: default;
+}
