@@ -187,18 +187,18 @@ def asset(catagory):
             if catagory == 'display':
                 asset.employee_name = employee_name.replace(search, '<span class="search">'+search+'</span>') if employee_name else None
                 asset.employee_status = employee_status
-                asset.vendor = asset.name.replace(search, '<span class="search">'+search+'</span>') if asset.vendor else None
-                asset.model = asset.serial.replace(search, '<span class="search">'+search+'</span>') if asset.model else None
-                asset.serial = asset.note.replace(search, '<span class="search">'+search+'</span>') if asset.serial else None
-                asset.note = asset.catagory.replace(search, '<span class="search">'+search+'</span>') if asset.note else None
+                asset.vendor = asset.vendor.replace(search, '<span class="search">'+search+'</span>') if asset.vendor else None
+                asset.model = asset.model.replace(search, '<span class="search">'+search+'</span>') if asset.model else None
+                asset.serial = asset.serial.replace(search, '<span class="search">'+search+'</span>') if asset.serial else None
+                asset.note = asset.note.replace(search, '<span class="search">'+search+'</span>') if asset.note else None
                 asset.asset_sn = asset.asset_sn.replace(search, '<span class="search">'+search+'</span>') if asset.asset_sn else None
             if catagory == 'laptop':
                 asset.employee_name = employee_name.replace(search, '<span class="search">'+search+'</span>') if employee_name else None
                 asset.employee_status = employee_status
-                asset.vendor = asset.name.replace(search, '<span class="search">'+search+'</span>') if asset.vendor else None
-                asset.model = asset.serial.replace(search, '<span class="search">'+search+'</span>') if asset.model else None
-                asset.serial = asset.note.replace(search, '<span class="search">'+search+'</span>') if asset.serial else None
-                asset.note = asset.catagory.replace(search, '<span class="search">'+search+'</span>') if asset.note else None
+                asset.vendor = asset.vendor.replace(search, '<span class="search">'+search+'</span>') if asset.vendor else None
+                asset.model = asset.model.replace(search, '<span class="search">'+search+'</span>') if asset.model else None
+                asset.serial = asset.serial.replace(search, '<span class="search">'+search+'</span>') if asset.serial else None
+                asset.note = asset.note.replace(search, '<span class="search">'+search+'</span>') if asset.note else None
                 asset.asset_sn = asset.asset_sn.replace(search, '<span class="search">'+search+'</span>') if asset.asset_sn else None
         else:
             asset.employee_name = employee_name
