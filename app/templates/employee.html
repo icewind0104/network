@@ -2,138 +2,386 @@
 
 {% block head %}
 <script type="text/javascript">
-    $('document').ready(function(){
+$('document').ready(function(){
 
-        $("a.emplyMod").click(function(){
-            //$("#modifybox #addr").val($(this).attr('id'));
-            $("#modifybox #name").val($(this).parent().parent().parent().find('td#name').text());
-            $("#modifybox #department_id").val(parseInt(this.dataset.depid));
-            $("form#emplyUpdate").attr("action", "{{prefix}}/employees/"+$(this).attr('id')+"/update/");
-        });
-
-        $("a.emplyDel").click(function(){
-            $("#deletebox").find(".motion").text(
-                $(this).parent().parent().parent().find("#name").text()
-            );
-            $("form#emplyDelete").attr("action", "{{prefix}}/employees/"+$(this).attr('id')+"/delete/");
-        });
-        
-        // 生成组织树状结构
-        var struct = {}; //用来保存树状组织架构的对象
-        !function(){
-            // 初始化所有部门
-            var departments = [
-		    {%- for department in departments -%}
-				{id:{{department.id}},name:'{{department.name}}',parent_id:{% if department.parent %}{{department.parent}}{% else %}0{% endif %},ipStart:{% if department.ipstart %}{{department.ipstart}}{% else %}0{% endif %},ipEnd:{% if department.ipend %}{{department.ipend}}{% else %}0{% endif %}},
-			{% endfor -%}
-            ];
-			
-            // 排序函数
-            function Sort(a,b){
-                return a.ipStart - b.ipStart;
-            }
-            
-            // 将部门列表组织为树形对象，每个对象的 children 属性保存下级部门数组
-            var fragment = document.createDocumentFragment();
-            
-            // 递归解析部门数组的函数
-            function x(struct, parent_id){
-                var deps = [];          //当前部门的下级部门集合
-                for (var i=0; i<departments.length; i++){
-                    if(departments[i].parent_id == parent_id){
-                        deps.push(departments.splice(i,1)[0]);
-                        i--;
-                    }
-                }
-                deps.sort(Sort);
-                struct.children = deps;  
-                for (i=0; i<deps.length; i++){
-                    x(deps[i], deps[i].id);
-                }
-            }
-            
-            // 生成树状组织结构并保存到 struct 中
-            x(struct, 0);
-            console.log(struct);
-            
-		}()
-        
-        //解析树状组织结构到左侧部门栏
-        !function(){
-            var currDepId = {% if curr_dep_id %}{{curr_dep_id}}{% else %}0{% endif %};
-            var fragment = document.createDocumentFragment();
-            function x(struct, container){
-                for (var i=0; i<struct.children.length; i++){
-                    var li = document.createElement("LI");
-                    if (struct.children[i].id == currDepId){
-                        li.classList.add("active");
-                    }
-                    li.innerHTML = "<a class='name' href={{prefix}}/employee/?dep="+struct.children[i].id+">"+struct.children[i].name+"</a>"+
-                        "<span class='operator hidden'><a class='modify depUpdate' id='"+struct.children[i].id+"' data-name="+struct.children[i].name+" href='#depUpdate' data-uk-modal><i class='uk-icon-pencil-square-o'></i></a>"+
-                        "<a class='danger depDel' id='"+struct.children[i].id+"' data-name="+struct.children[i].name+" href='#depDelete' data-uk-modal><i class='uk-icon-times-circle'></i></a></span>";
-                    container.appendChild(li);
-                    
-                    if (struct.children[i].children.length > 0) {   //该部门存在下级部门
-                        var I = document.createElement("I");
-                        I.classList.add("uk-icon-caret-right");
-                        I.classList.add("dropdown");
-                        li.insertBefore(I, li.children[0]);
-                    
-                        var ul = document.createElement("UL");
-                        ul.classList.add("hidden");
-                        container.appendChild(ul);
-                        x(struct.children[i], ul);
-                    } else {
-                        var I = document.createElement("I");
-                        I.classList.add("uk-icon-caret-right");
-                        I.classList.add("hidden");
-                        li.insertBefore(I, li.children[0]);
-                    }
-                }
-            }
-            x(struct, fragment);
-            $("#departments #list").append(fragment);
-            
-            //折叠\展开下级部门
-            $("div#departments div#list i.dropdown").click(function(){
-                var ul = this.parentNode.nextSibling;
-                if (ul.classList.contains("hidden")) {
-                    this.classList.remove("uk-icon-caret-right");
-                    this.classList.add("uk-icon-caret-down");
-                    ul.classList.remove("hidden");
-                } else {
-                    this.classList.remove("uk-icon-caret-down");
-                    this.classList.add("uk-icon-caret-right");
-                    ul.classList.add("hidden");
-                }
-            })
-            
-            //添加部门编辑功能
-            $("a.depAdd").click(function(){
-                $("form#formDepartmentAdd #parent").val(currDepId);
-            });
-            
-            $("a.depDel").click(function(){
-                $("form#formDepartmentDelete").attr("action", "{{prefix}}/departments/"+$(this).attr('id')+"/delete/");
-                $("form#formDepartmentDelete .motion").text(this.dataset.name);
-            });
-        
-            $("a.depUpdate").click(function(){
-                $("form#formDepartmentUpdate").attr("action", "{{prefix}}/departments/"+$(this).attr('id')+"/update/");
-                $("form#formDepartmentUpdate #name").val(this.dataset.name);
-            });
-            
-            $("#departments div#list li").mouseenter(function(event){
-                this.classList.add("select");
-                this.children[2].classList.remove("hidden");
-            });
-            
-            $("#departments div#list li").mouseleave(function(event){
-                this.classList.remove("select");
-                this.children[2].classList.add("hidden");
-            });
-        }();
+    $("table#employeeList").click(function(e){
+        //修改员工信息
+        var t = $(e.target).closest(".emplyMod");
+        if (t.length == 1){
+            $("#modifybox #na me").val(t.parent().parent().parent().find('td#name').text());
+            $("#modifybox #department_id").val(parseInt(t[0].dataset.depid));
+            $("form#emplyUpdate").attr("action", "{{prefix}}/employees/"+t.attr('id')+"/update/");
+        }
+        //删除员工信息
+        t = $(e.target).closest(".emplyDel");
+        if (t.length == 1){
+            $("#deletebox").find(".motion").text(t.parent().parent().parent().find("#name").text());
+            $("form#emplyDelete").attr("action", "{{prefix}}/employees/"+t.attr('id')+"/delete/");
+        }
+        //垃圾回收
+        t = null;
     });
+    
+    // 生成组织树状结构
+    var struct = {}; //用来保存树状组织架构的对象
+    !function(){
+        // 初始化所有部门
+        var departments = [
+        {%- for department in departments -%}
+            {id:{{department.id}},name:'{{department.name}}',parent_id:{% if department.parent %}{{department.parent}}{% else %}0{% endif %},ipStart:{% if department.ipstart %}{{department.ipstart}}{% else %}0{% endif %},ipEnd:{% if department.ipend %}{{department.ipend}}{% else %}0{% endif %}},
+        {% endfor -%}
+        ];
+        
+        // 排序函数
+        function Sort(a,b){
+            return a.ipStart - b.ipStart;
+        }
+        
+        // 将部门列表组织为树形对象，每个对象的 children 属性保存下级部门数组
+        var fragment = document.createDocumentFragment();
+        
+        // 递归解析部门数组的函数
+        function x(struct, parent_id){
+            var deps = [];          //当前部门的下级部门集合
+            for (var i=0; i<departments.length; i++){
+                if(departments[i].parent_id == parent_id){
+                    deps.push(departments.splice(i,1)[0]);
+                    i--;
+                }
+            }
+            deps.sort(Sort);
+            struct.children = deps;  
+            for (i=0; i<deps.length; i++){
+                x(deps[i], deps[i].id);
+            }
+        }
+        
+        // 生成树状组织结构并保存到 struct 中
+        x(struct, 0);
+    }()
+    
+    //解析树状组织结构到左侧部门栏
+    !function(){
+        var currDepId = {% if curr_dep_id %}{{curr_dep_id}}{% else %}0{% endif %};
+        var fragment = document.createDocumentFragment();
+        function x(struct, container){
+            for (var i=0; i<struct.children.length; i++){
+                var li = document.createElement("LI");
+                if (struct.children[i].id == currDepId){
+                    li.classList.add("active");
+                }
+                li.innerHTML = "<a class='name' data-dep="+struct.children[i].id+" href={{prefix}}/employee/?dep="+struct.children[i].id+">"+struct.children[i].name+"</a>"+
+                    "<span class='operator hidden'><a class='modify depUpdate' id='"+struct.children[i].id+"' data-name="+struct.children[i].name+" href='#depUpdate' data-uk-modal><i class='uk-icon-pencil-square-o'></i></a>"+
+                    "<a class='danger depDel' id='"+struct.children[i].id+"' data-name="+struct.children[i].name+" href='#depDelete' data-uk-modal><i class='uk-icon-times-circle'></i></a></span>";
+                container.appendChild(li);
+                
+                if (struct.children[i].children.length > 0) {   //该部门存在下级部门
+                    var I = document.createElement("I");
+                    I.classList.add("uk-icon-caret-right");
+                    I.classList.add("dropdown");
+                    li.insertBefore(I, li.children[0]);
+                
+                    var ul = document.createElement("UL");
+                    ul.classList.add("hidden");
+                    container.appendChild(ul);
+                    x(struct.children[i], ul);
+                } else {
+                    var I = document.createElement("I");
+                    I.classList.add("uk-icon-caret-right");
+                    I.classList.add("hidden");
+                    li.insertBefore(I, li.children[0]);
+                }
+            }
+        }
+        x(struct, fragment);
+        $("#departments #list").append(fragment);
+        
+        //折叠\展开下级部门
+        $("div#departments div#list i.dropdown").click(function(){
+            var ul = this.parentNode.nextSibling;
+            if (ul.classList.contains("hidden")) {
+                this.classList.remove("uk-icon-caret-right");
+                this.classList.add("uk-icon-caret-down");
+                ul.classList.remove("hidden");
+            } else {
+                this.classList.remove("uk-icon-caret-down");
+                this.classList.add("uk-icon-caret-right");
+                ul.classList.add("hidden");
+            }
+        })
+        
+        //添加部门编辑功能
+        $("a.depAdd").click(function(){
+            $("form#formDepartmentAdd #parent").val(currDepId);
+        });
+        
+        $("a.depDel").click(function(){
+            $("form#formDepartmentDelete").attr("action", "{{prefix}}/departments/"+$(this).attr('id')+"/delete/");
+            $("form#formDepartmentDelete .motion").text(this.dataset.name);
+        });
+    
+        $("a.depUpdate").click(function(){
+            $("form#formDepartmentUpdate").attr("action", "{{prefix}}/departments/"+$(this).attr('id')+"/update/");
+            $("form#formDepartmentUpdate #name").val(this.dataset.name);
+        });
+        
+        $("#departments li").mouseenter(function(event){
+            this.classList.add("select");
+            if (typeof(this.children[2]) != 'undefined') {
+                this.children[2].classList.remove("hidden");
+            }
+        });
+        
+        $("#departments li").mouseleave(function(event){
+            this.classList.remove("select");
+            if (typeof(this.children[2]) != 'undefined') {
+                this.children[2].classList.add("hidden");
+            }
+        });
+    }();
+    
+    //页面各项功能的JS实现
+    !function(){
+        //设置项
+        var preDisplayPage = 3;     //页码栏最多往前展示N页，其他用 "..." 代替
+        var nextDisplayPage = 5;    //页码栏最后往前展示N页，其他用 "..." 代替
+        
+        var currDep = null;     //当前部门
+        var currPage = null;    //当前页码
+        var currKeyWord = null; //当前关键字
+        var Count = null;       //保存总结果数，避免重复查找数据库
+        
+        //通过ajax获取员工信息列表
+        var xhr = new XMLHttpRequest();
+        function getEmployeeList(department, page, keyWord, args, recall){
+            xhr.abort();
+            var url = "";
+            
+            // 参数为 undefined 表示保持对应筛选条件不变
+            if (typeof(department) != "undefined")
+                currDep = department;
+            if (typeof(page) != "undefined")
+                currPage = page;
+            if (typeof(keyWord) != "undefined")
+                currKeyWord = keyWord;
+            
+            if (currDep != null)
+                url += "dep="+currDep+"&";
+            if (currPage != null)
+                url += "page="+currPage+"&";
+            if (currKeyWord != null)
+                url += "search="+currKeyWord+"&";
+                
+            if (typeof(args) == "object") {
+                for (name in args) {
+                    if (typeof(args[name]) == "string") {
+                        url += name+"="+args[name]+"&"
+                    }
+                }
+            }
+                
+            if (url != "") {
+                url = "?" + url.substring(0, url.length-1)
+            }
+            
+            xhr.open("get", "{{prefix}}/employee/json/"+url, true);
+            xhr.responseType = "json";
+            xhr.timeout = 8000;
+            xhr.onload = function(e){
+                if(this.status == 200){
+                    if (this.response["count"] != undefined) {
+                        Count = this.response["count"];
+                    }
+                    recall({success:true, list:this.response.list, count:Count, rowsPerPage:this.response.rowsPerPage});
+                } else {
+                    recall({success:false});
+                }
+            };
+            xhr.send(null);
+        }
+        
+        // 更新HTML页面员工列表信息
+        function updateEmployeeList(list){
+            $("table#employeeList tbody *").remove();
+            $("div#ListPrompt *").remove();
+            var fragment = document.createDocumentFragment();
+            
+            for (var i=0; i< list.length; i++){
+                var tr = document.createElement("TR");
+                tr.classList.add("uk-visible-hover-inline");
+                
+                //基本信息
+                tr.innerHTML = "<td id='name'>"+list[i].name+"</td>"+
+                               "<td id='department'>"+list[i].dep+"</td>";
+                               
+                if (list[i].status == true) {
+                    tr.innerHTML += "<td id='status'>在职</td>";
+                } else {
+                    tr.innerHTML += "<td id='status'>离职</td>";
+                }
+                
+                //管理员操作
+                {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
+                tr.innerHTML += "<td>\n<div>\n<a id="+list[i].id+" data-depid="+list[i].department_id+" class='modify emplyMod' href='#modifybox' data-uk-modal><i class='uk-icon-pencil-square-o'></i></a>\n<a id="+list[i].id+" class='danger emplyDel' href='#deletebox' data-uk-modal><i class='uk-icon-times-circle'></i></a>\n</div>\n</td>\n";
+                {% endif %}
+                
+                fragment.appendChild(tr);
+                tr = null;
+            }
+            $("table#employeeList tbody")[0].appendChild(fragment);
+        }
+        
+        //更新页码栏
+        var $pageBox = $("ul#page");
+        function updatePage(count, rowsPerPage, currPage) {
+            var fragment = document.createDocumentFragment();
+            $pageBox.children().remove();
+            var maxPage = parseInt((count + rowsPerPage - 1) / rowsPerPage);
+            var obj = null;     //临时保存创建的DOM元素
+            
+            //如果查找结果为0条数据
+            maxPage = maxPage == 0 ? 1 : maxPage;
+            
+            //添加前一页按钮
+            obj = document.createElement("LI");
+            if (currPage != 1) {
+                obj.innerHTML = "<a>&lt;&lt;</a>";
+                obj.dataset.goto = currPage-1;
+            } else {
+                obj.classList.add("uk-disabled");
+                obj.innerHTML = "<span class='uk-disabled'>&lt;&lt;</span>";
+            }
+            fragment.appendChild(obj);
+            
+            var hidPreviousPage = false;    //是否有之前的页码按钮被隐藏
+            var hidNextPage = false;        //是否有之后的页码按钮被隐藏
+            //添加页面按钮
+            for (var i=1; i<=maxPage; i++) {
+                
+                if (i < currPage - preDisplayPage && i != 1) {
+                    //隐藏首部多余页面按钮，并设置隐藏标记
+                    hidPreviousPage = true;
+                } else if (i > currPage + nextDisplayPage && i != maxPage) {
+                    //隐藏尾部多余页面按钮，并设置隐藏标记
+                    hidNextPage = true;
+                } else {
+                    obj = document.createElement("LI");
+                    if (currPage == i){
+                        obj.classList.add("uk-active");
+                        obj.innerHTML = "<span>"+i+"</span>";
+                    } else {
+                        obj.innerHTML = "<a>"+i+"</a>";
+                        obj.dataset.goto = i;
+                    }
+                    fragment.appendChild(obj);
+                }
+            }
+            
+            if (hidPreviousPage == true) {
+                obj = document.createElement("LI");
+                obj.innerHTML = "<span>...</span>";
+                fragment.insertBefore(obj, fragment.children[2]);
+            }
+            if (hidNextPage == true) {
+                obj = document.createElement("LI");
+                obj.innerHTML = "<span>...</span>";
+                fragment.insertBefore(obj, fragment.children[fragment.children.length-1]);
+            }
+            
+            //添加后一页按钮
+            obj = document.createElement("LI");
+            if (currPage != maxPage) {
+                obj.innerHTML = "<a>&gt;&gt;</a>"
+                obj.dataset.goto = currPage+1;
+            } else {
+                obj.classList.add("uk-disabled");
+                obj.innerHTML = "<span>&gt;&gt;</span>";
+            }
+            fragment.appendChild(obj);
+            
+            //呈现到页面
+            $pageBox.append($(fragment));
+        }
+        
+        // 根据部门查询
+        var $currDepBar = $("div#departments li:eq(0)");  //保存当前点选的部门<li>标签
+        $("#departments a.name").click(function(event){
+            event.preventDefault();
+            
+            var department = null;
+            var $clickDepBar = $(this).parents("li");
+            if (typeof(this.dataset.dep) != 'undefined')
+                department = this.dataset.dep;
+            
+            // 根据点选的部门(deparment)查找对应员工列表信息，页码设为第一页(null即是第一页)，搜索关键字不变(undefined)，并添加额外参数，并提供搜索完毕后的回调函数
+            getEmployeeList(department, null, undefined, {count:"true"}, function(result){
+                if(result.success){
+                    // 数据获取成功
+                    updateEmployeeList(result.list);    //更新员工信息栏
+                    updatePage(result.count, result.rowsPerPage, 1);        //更新页码栏
+                    $currDepBar.removeClass("active");
+                    $clickDepBar.addClass("active");
+                    $currDepBar = $clickDepBar;
+                    $clickDepBar = null;
+                } else {
+                    // 数据获取失败
+                    updatePage(1, 1)                    //更新页码栏
+                    $("div#ListPrompt *").remove();
+                    alert("数据加载失败");
+                }
+            });
+        });
+        
+        // 根据页码查询
+        var $currPageBar = $("ul#page li:eq(1)")
+        $("ul#page").click(function(e){
+            var $li = $(e.target).closest("li");
+            console.log($li.data("goto"));
+            if ($li.length > 0 && $li.data("goto") != undefined) {
+                // 根据点选的页码(li.dataset("goto"))查找对应员工列表信息，部门保持不变(undefined)，搜索关键字不变(undefined)，不添加额外URL参数(null)，并提供搜索完毕后的回调函数
+                getEmployeeList(undefined, parseInt($li.data("goto")), undefined, null, function(result){
+                    if(result.success){
+                        // 数据获取成功
+                        updateEmployeeList(result.list);    //更新员工信息栏
+                        updatePage(result.count, result.rowsPerPage, $li.data("goto"));        //更新页码栏
+                    } else {
+                        // 数据获取失败
+                        $("div#ListPrompt *").remove();
+                        alert("数据加载失败");
+                    }
+                });
+            }
+        });
+        
+        //根据关键字搜索
+        $("div#searchBox button").click(function(e){
+            var searchKey = $(e.target).parent().children("input").val();
+            console.log(searchKey)
+            // 根据关键字查找对应员工列表信息，部门保持不变(undefined)，页码设为第一页(null即是第一页)，并附带URL参数，并提供搜索完毕后的回调函数
+            getEmployeeList(undefined, null, searchKey, {count:"true"}, function(result){
+                if(result.success){
+                    // 数据获取成功
+                    updateEmployeeList(result.list);    //更新员工信息栏
+                    updatePage(result.count, result.rowsPerPage, 1);        //更新页码栏
+                } else {
+                    // 数据获取失败
+                    $("div#ListPrompt *").remove();
+                    alert("数据加载失败");
+                }
+            });
+            return false;
+        });
+    }();
+    
+    //初始化页面
+    !function(){
+        // 获取员工信息（模拟鼠标点击）
+        var event = document.createEvent('HTMLEvents');
+        event.initEvent("click", true, true);
+        event.eventType = 'message';
+        document.getElementById("departments").children[0].children[0].dispatchEvent(event);
+    }();
+});
 </script>
 {% endblock %}
 
@@ -157,17 +405,17 @@
     </ul>
     
     <div id="departments">
-        <a href="{{prefix}}/employee/" class="li">
-            <li {% if curr_dep_id == None %}class="active"{% endif %}>零壹移动互联<span></span></li>
-        </a>
+        <li {% if curr_dep_id == None %}class="active"{% endif %}>
+            <a class="name">零壹移动互联</a>
+        </li>
         
         <div id="list">
             <!-- department list -->
         </div>
         
-        <a href="{{prefix}}/employee/?dep=0" class="li">
-            <li {% if curr_dep_id == '0' %}class="active"{% endif %}>未指定部门的员工<span></span></li>
-        </a>
+        <li {% if curr_dep_id == '0' %}class="active"{% endif %}>
+            <a data-dep="0" class="name">未指定部门的员工</a>
+        </li>
     </div>
 {% endblock %}
 
@@ -178,20 +426,20 @@
             <div class="uk-flex-right uk-grid">
                 <div class="uk-width-1-2"></div>
                 <div class="uk-text-right uk-width-1-2">
-                <form class="uk-form" method="GET" action="{{prefix}}/employee/">
-                    <fieldset data-uk-margin>
-                        <div class="uk-form-icon"><i class="uk-icon-search"></i>
-                        <input placeholder="search..." autocomplete="off" type="text" name="search" value="{% if search %}{{search}}{% endif %}">
-                        <button class="uk-button mybutton">搜索</button></div>
-                    </fieldset>
-                </form>
+                    <form class="uk-form" method="GET" action="#">
+                        <fieldset data-uk-margin>
+                            <div id="searchBox" class="uk-form-icon"><i class="uk-icon-search"></i>
+                            <input placeholder="search..." autocomplete="off" type="text" name="search" value="{% if search %}{{search}}{% endif %}">
+                            <button class="uk-button mybutton">搜索</button></div>
+                        </fieldset>
+                    </form>
                 </div>
             </div>
         </div>
 
         <!-- table list -->
         <div class="uk-overflow-container">
-            <table class="uk-table uk-text-nowrap uk-table-hover uk-table-striped">
+            <table id="employeeList" class="uk-table uk-text-nowrap uk-table-hover uk-table-striped">
                 <thead>
                     <tr style="background-image:linear-gradient(to bottom,#fff,#eee);">
                         <th class="">员工姓名</th>
@@ -204,13 +452,12 @@
                 </thead>
                 <tbody>
                 {% for employee, department in employees %}
-                    <tr class="uk-visible-hover-inline" id="">
-                        <td id="name" class="">{{ employee.name|safe }}</td>
-                        <td id="department" class="">{% if department == None %}未指定{% else %}{{ department }}{% endif %}</td>
-                        <td id="status" class="">{%if employee.status==True %}在职{%elif employee.status==False %}离职{%else%}未知{%endif%}</td>
+                    <tr class="uk-visible-hover-inline">
+                        <td id="name">{{ employee.name|safe }}</td>
+                        <td id="department">{% if department == None %}未指定{% else %}{{ department }}{% endif %}</td>
+                        <td id="status">{%if employee.status==True %}在职{%elif employee.status==False %}离职{%else%}未知{%endif%}</td>
                         {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
-                        <td  class="">
-                            <!-- Operators -->
+                        <td>
                             <div>
                                 <a id="{{employee.id}}" data-depid="{{employee.department_id}}" class="modify emplyMod" href="#modifybox" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
                                 <a id="{{employee.id}}" class="danger emplyDel" href="#deletebox" data-uk-modal><i class="uk-icon-times-circle"></i></a>
@@ -221,40 +468,17 @@
                 {% endfor %}
                 </tbody>
             </table>
-            {% if not employees %}
-            <div class="uk-alert uk-alert-warning">
-                {% if IP_count %}未找到相关内容 ....{% else %}点击左侧网络或使用搜索查找信息{%endif%}
+
+            <div id="ListPrompt">
+                {% if not employees %}
+                <div class="uk-alert uk-alert-warning">
+                    {% if IP_count %}未找到相关内容 ....{% else %}点击左侧网络或使用搜索查找信息{%endif%}
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
 
-        <!-- pagination -->
-        {% if Page %}
-        <ul class="uk-pagination uk-panel uk-panel-box" style="padding:15px;">
-            {% if Page.previous_page %}
-                <li><a href="{{ processor_generate_search(page=Page.previous_page, search=search) }}"><span><<</span></a></li>
-            {% else %}
-                <li class="uk-disabled"><span>&lt;&lt;</span></li>
-            {% endif %}
-
-            {% for p in Page.all_page() %}
-                {% if p == "..." %}<li><span>{{p}}</span></li>
-                {% else %}
-                    {% if p == Page.curr_page %}
-                        <li class="uk-active"><span>{{p}}</span></li>
-                    {% else %}
-                        <li><a href="{{ processor_generate_search(page=p, search=search) }}">{{p}}</a></li>
-                    {% endif %}
-                {% endif %}
-            {% endfor %}
-
-            {% if Page.next_page %}
-                <li><a href="{{ processor_generate_search(page=Page.next_page, search=search) }}"><span>>></span></a></li>
-            {% else %}
-                <li class="uk-disabled"><span>&gt;&gt;</span></li>
-            {% endif %}
-        </ul>
-        {% endif %}
+        <ul id="page" class="uk-pagination uk-panel uk-panel-box" style="padding:15px;"></ul>
 
     </div>
 

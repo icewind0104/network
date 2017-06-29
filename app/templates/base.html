@@ -44,7 +44,7 @@
             {% endif %}
         {% endwith %}
 
-            <div class="uk-grid" style="min-width:1000px;">
+            <div class="uk-grid" style="min-width:1200px;">
                 <!-- left area -->
                 <div class="uk-width-1-5">
                     <!-- account bar -->
@@ -64,7 +64,7 @@
                     <ul class="uk-tab">
                         <li class="{% if navi=='employee' %}uk-active{% endif %}"><a href="{{prefix}}/employee/">员工</a></li>
                         <li class="{% if navi=='ip' %}uk-active{% endif %}"><a href="{{prefix}}/">IP</a></li>
-                        <li class="{% if navi=='asset' %}uk-active{% endif %}"><a href="{{prefix}}/asset/all/">资产</a></li>
+                        <li class="{% if navi=='asset' %}uk-active{% endif %}"><a href="{{prefix}}/asset/display/">资产</a></li>
                     </ul>
 
                     {% block left %}<!-- block left -->{% endblock %}

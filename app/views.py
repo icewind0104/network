@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from app import app, models, mylib, db, lm
 from flask import render_template, flash, redirect, url_for, g, request, session
-from app.forms import Net, Ip, Login, Asset, Employee, Department, BooleanSelectField, NeedSearchIdField
+from app.forms import Net, Ip, Login, Host, Display, Laptop, Employee, Department, BooleanSelectField, NeedSearchIdField
 from wtforms import StringField
 from sqlalchemy import or_
 from flask_login import login_required, login_user, logout_user, current_user
-import re, urllib, wtforms, json
+import re, urllib, wtforms, json, time
 
 prefix = app.config['MOUNT_POINT']
 
@@ -110,8 +110,46 @@ def index():
 
 @app.route('/asset/<string:catagory>/', methods=['GET', 'POST'])
 def asset(catagory):
-    max_list = 12
-    query = db.session.query(models.assets, models.employees).outerjoin(models.employees)
+    # configure
+    rows_per_page = 12
+    
+    # 设置分类以及当前分类下的关键字搜索
+    search = request.form['search'] if request.method == 'POST' else request.args.get('search', None)
+    if catagory == 'host':
+        form = Host()
+        query = db.session.query(models.hosts, models.employees.name, models.employees.status).outerjoin(models.employees)
+        if search is not None and search != '':
+            query = query.filter(or_(
+                models.employees.name.contains(search),
+                models.hosts.cpu.contains(search),
+                models.hosts.memory.contains(search),
+                models.hosts.motherboard.contains(search),
+                models.hosts.graphics.contains(search),
+                models.hosts.note.contains(search),
+                models.hosts.asset_sn.contains(search)
+            ))
+    if catagory == 'display':
+        form = Display()
+        query = db.session.query(models.displays, models.employees.name, models.employees.status).outerjoin(models.employees)
+        if search is not None and search != '':
+            query = query.filter(or_(
+                models.employees.name.contains(search),
+                models.displays.vendor.contains(search),
+                models.displays.model.contains(search),
+                models.displays.serial.contains(search),
+                models.displays.note.contains(search)
+            ))
+    if catagory == 'laptop':
+        form = Laptop()
+        query = db.session.query(models.laptops, models.employees.name, models.employees.status).outerjoin(models.employees)
+        if search is not None and search != '':
+            query = query.filter(or_(
+                models.employees.name.contains(search),
+                models.laptops.vendor.contains(search),
+                models.laptops.model.contains(search),
+                models.laptops.serial.contains(search),
+                models.laptops.note.contains(search),
+            ))
 
     # 过滤未使用的资产
     unused = request.args.get('unused', None)
@@ -119,54 +157,56 @@ def asset(catagory):
         session['unused'] = True
     elif unused == 'false':
         session['unused'] = False
-
-    # 搜索关键词
-    search = request.form['search'] if request.method == 'POST' else request.args.get('search', None)
-    if search is not None and search != '':
-        query = query.filter(or_(
-            models.employees.name.contains(search),
-            models.assets.catagory.contains(search),
-            models.assets.name.contains(search),
-            models.assets.serial.contains(search),
-            models.assets.note.contains(search)
-        ))
-
-    # 设置分类
-    if catagory != 'all':
-        List = {
-		    'display': '显示器',
-			'desktop': '台式主机',
-			'laptop': '笔记本电脑',
-			'other': '其他'
-		}
-        query = query.filter(models.assets.catagory == List[catagory])
-
-    form = Asset()
     if session.get('unused', False) == True:
         query = query.filter(or_(models.assets.employee_id == None, models.employees.status == False))
 
     # 页码
-    curr_page = request.args.get('page', None) or 1
-    try:
-        curr_page = int(curr_page)
-    except:
-        curr_page = 1
-    Page = mylib.page(query.count(), max_list, curr_page)
+    Page = mylib.page(query.count(), request, rows_per_page)
+    
+    # 按分类进行排序
+    query = query.order_by(getattr(models, catagory+"s").id.desc())
+    
+    # 分页
+    assets = mylib.paging(query, request, rows_per_page)
+    
+    # 分类渲染结果
+    for asset, employee_name, employee_status in assets:
+        if getattr(asset, 'create_time', None):
+            asset.create_time_str = time.strftime('%Y-%m-%d', time.localtime(asset.create_time))
+            
+        if search is not None and search != '':
+            if catagory == 'host':
+                asset.employee_name = employee_name.replace(search, '<span class="search">'+search+'</span>') if employee_name else None
+                asset.employee_status = employee_status
+                asset.cpu = asset.cpu.replace(search, '<span class="search">'+search+'</span>') if asset.cpu else None
+                asset.memory = asset.memory.replace(search, '<span class="search">'+search+'</span>') if asset.memory else None
+                asset.motherboard = asset.motherboard.replace(search, '<span class="search">'+search+'</span>') if asset.motherboard else None
+                asset.graphics = asset.graphics.replace(search, '<span class="search">'+search+'</span>') if asset.graphics else None
+                asset.note = asset.note.replace(search, '<span class="search">'+search+'</span>') if asset.note else None
+                asset.asset_sn = asset.asset_sn.replace(search, '<span class="search">'+search+'</span>') if asset.asset_sn else None
+            if catagory == 'display':
+                asset.employee_name = employee_name.replace(search, '<span class="search">'+search+'</span>') if employee_name else None
+                asset.employee_status = employee_status
+                asset.vendor = asset.name.replace(search, '<span class="search">'+search+'</span>') if asset.vendor else None
+                asset.model = asset.serial.replace(search, '<span class="search">'+search+'</span>') if asset.model else None
+                asset.serial = asset.note.replace(search, '<span class="search">'+search+'</span>') if asset.serial else None
+                asset.note = asset.catagory.replace(search, '<span class="search">'+search+'</span>') if asset.note else None
+                asset.asset_sn = asset.asset_sn.replace(search, '<span class="search">'+search+'</span>') if asset.asset_sn else None
+            if catagory == 'laptop':
+                asset.employee_name = employee_name.replace(search, '<span class="search">'+search+'</span>') if employee_name else None
+                asset.employee_status = employee_status
+                asset.vendor = asset.name.replace(search, '<span class="search">'+search+'</span>') if asset.vendor else None
+                asset.model = asset.serial.replace(search, '<span class="search">'+search+'</span>') if asset.model else None
+                asset.serial = asset.note.replace(search, '<span class="search">'+search+'</span>') if asset.serial else None
+                asset.note = asset.catagory.replace(search, '<span class="search">'+search+'</span>') if asset.note else None
+                asset.asset_sn = asset.asset_sn.replace(search, '<span class="search">'+search+'</span>') if asset.asset_sn else None
+        else:
+            asset.employee_name = employee_name
+            asset.employee_status = employee_status
+            
+    Assets = [x[0] for x in assets]
 
-    # 排序
-    query = query.order_by(models.assets.id.desc())
-    assets = query[(int(Page.curr_page)-1)*max_list:(int(Page.curr_page)-1)*max_list+max_list]
-
-    # 渲染搜索结果
-    if search is not None and search != '':
-        for asset, employee in assets:
-            asset.employee_name = employee.name.replace(search, '<span class="search">'+search+'</span>') if employee else None
-            asset.name = asset.name.replace(search, '<span class="search">'+search+'</span>') if asset.name else None
-            asset.serial = asset.serial.replace(search, '<span class="search">'+search+'</span>') if asset.serial else None
-            asset.note = asset.note.replace(search, '<span class="search">'+search+'</span>') if asset.note else None
-            asset.catagory = asset.catagory.replace(search, '<span class="search">'+search+'</span>') if asset.catagory else None
-
-    return render_template('asset.html', navi='asset', prefix=prefix, assets=assets, form=form, catagory=catagory, Page=Page, search=search)
+    return render_template('asset.html', navi='asset', prefix=prefix, assets=Assets, form=form, catagory=catagory, Page=Page, search=search)
 
 #--------------------------------------------
 #   Employee - /employee/
@@ -183,7 +223,7 @@ def employee():
     form.department_id.choices.extend([(str(r.id), r.name) for r in departments])
     form_dep = Department()
     
-    max_list = 12
+    rows_per_page = 12
     
     # 限制部门
     if curr_dep_id != None:
@@ -200,16 +240,13 @@ def employee():
         ))
 
     # 页码
-    curr_page = request.args.get('page', None) or 1
-    try:
-        curr_page = int(curr_page)
-    except:
-        curr_page = 1
-    Page = mylib.page(query.count(), max_list, curr_page)
+    Page = mylib.page(query.count(), request, rows_per_page)
 
     # 排序
     query = query.order_by(models.employees.id.desc())
-    employees = query[(int(Page.curr_page)-1)*max_list:(int(Page.curr_page)-1)*max_list+max_list]
+    
+    # 分页
+    employees = mylib.paging(query, request, rows_per_page)
 
     # 渲染搜索结果
     if search is not None and search != '':
@@ -227,6 +264,49 @@ def employee():
         curr_dep_id = curr_dep_id,
         search      = search
     )
+    
+@app.route('/employee/json/', methods=['GET', 'POST'])
+def employee_json():
+    # configure
+    rows_per_page = 12
+    
+    # result: 用来返回结果的字典
+    result = {}
+    result['rowsPerPage'] = rows_per_page
+    curr_dep_id = request.args.get('dep', None)
+    query = db.session.query(models.employees, models.departments.name).outerjoin(models.departments)
+    
+    # 限制部门
+    if curr_dep_id != None:
+        if curr_dep_id == '0':
+            query = query.filter(models.employees.department_id == None)
+        else:
+            query = query.filter(models.employees.department_id == int(curr_dep_id))
+
+    # 搜索
+    search = request.args.get('search', None)
+    if search is not None and search != '':
+        query = query.filter(or_(
+            models.employees.name.contains(search)
+        ))
+
+    if (request.args.get('count', None) == 'true'):
+        result['count'] = query.count()
+
+    # 排序
+    query = query.order_by(models.employees.id.desc())
+    
+    # 分页
+    employees = mylib.paging(query, request, rows_per_page)
+
+    # 渲染搜索结果
+    if search is not None and search != '':
+        for employee, deparment in employees:
+            employee.name = employee.name.replace(search, '<span class="search">'+search+'</span>') if employee.name else None
+            
+    result['list'] = [dict(**r1.to_dict(), dep=r2) for r1,r2 in employees]          
+
+    return json.dumps(result)
     
 @app.route('/departments/add/', methods=['GET', 'POST'])
 @login_required
@@ -443,9 +523,7 @@ def test_clean():
 
 @app.route('/test/', methods=['GET', 'POST'])
 def test():
-    departments = models.departments.query.all()
-    form = Department()
-    return render_template('test.html', departments=departments, form=form)
+    return render_template('test.html')
 
 def create_model_func(model, Form, form_func=None):
     # 模板-添加记录
@@ -570,8 +648,9 @@ def employee_form_func(form):
     F.department_id.choices.extend([(str(r.id), r.name) for r in models.departments.query.all()])
     return F
 create_model_func(models.employees, Employee, form_func=employee_form_func)
-
-create_model_func(models.assets, Asset)
+create_model_func(models.hosts, Host)
+create_model_func(models.displays, Display)
+create_model_func(models.laptops, Laptop)
 
 # ---------------[ Test END ]---------------
 

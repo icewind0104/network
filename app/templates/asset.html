@@ -37,25 +37,26 @@
             location.href = search;
         });
 
-        $("a.modify").click(
-            function(){
-                //$("#modifybox #addr").val($(this).attr('id'));
-                $("#modifybox #name").val($(this).parent().parent().parent().find('td#name').text());
-                $("#modifybox #catagory").val($(this).parent().parent().parent().find('td#catagory').text());
-                $("#modifybox #employee_id").val($(this).parent().parent().parent().attr("data-employee-name"));
-                $("#modifybox #serial").val($(this).parent().parent().parent().find('td#serial').text());
-                $("#modifybox #note").val($(this).parent().parent().parent().find('td#note').text());
-                $("form#ipUpdate").attr("action", "{{prefix}}/assets/"+$(this).attr('id')+"/update/");
-            });
-
-        $("a.danger").click(
-            function(){
-                $("#deletebox").find(".motion").text(
-                    $(this).parent().parent().parent().find("#name").text()
-                );
-                $("form#ipDelete").attr("action", "{{prefix}}/assets/"+$(this).attr('id')+"/delete/");
-            });
-
+        $("A#assetAdd").click(function(e){
+            hostDiv = $($(this).attr("href"));
+            hostDiv.parent().attr("action", "{{prefix}}/{{catagory}}s/add/");
+        })
+        
+        // 资产数据编辑
+        $("table#assetList").click(function(e){
+            var $a = $(e.target).closest("A");
+            if ($a.hasClass("modify")) {
+                var i = 0,
+                    tds = $a.closest("TR").children("td.column"),
+                    hostDiv = $($a.attr("href"));
+                
+                hostDiv.parent().attr("action", "{{prefix}}/{{catagory}}s/update/");
+                
+                for(; i < tds.length; i++) {
+                    hostDiv.find("#"+tds[i].id).val($(tds[i]).text());
+                }
+            }
+        });
     });
 </script>
 {% endblock %}
@@ -64,16 +65,14 @@
     <ul class="uk-nav uk-nav-side uk-nav-parent-icon">
         {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
         <li>
-            <a href="#netaddbox" data-uk-modal><i class="uk-icon-plus-square"></i>&nbsp添加资产</a>
+            <a id="assetAdd" href="#{{catagory}}form" data-uk-modal><i class="uk-icon-plus-square"></i>&nbsp添加资产</a>
         </li>
         <li class="uk-nav-divider"></li>
         {% endif %}
 
-        <li class="{% if catagory == 'all' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/all/">所有</a></li>
         <li class="{% if catagory == 'display' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/display/">显示器</a></li>
-        <li class="{% if catagory == 'desktop' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/desktop/">台式主机</a></li>
+        <li class="{% if catagory == 'host' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/host/">台式主机</a></li>
         <li class="{% if catagory == 'laptop' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/laptop/">笔记本电脑</a></li>
-        <li class="{% if catagory == 'other' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/other/">其他</a></li>
         <li class="uk-nav-divider"></li>
         <li><input id="filter_used" type="checkbox" {% if session['unused'] == True %}checked{% endif %}/>只显示未使用资产</li>
     </ul>
@@ -99,45 +98,123 @@
 
         <!-- table list -->
         <div class="uk-overflow-container">
-            <table class="uk-table uk-text-nowrap uk-table-hover uk-table-striped">
+            <table id="assetList" class="uk-table uk-text-nowrap uk-table-hover uk-table-striped">
+                <!-- host -->
+                {% if catagory == 'display' %}
                 <thead>
                     <tr style="background-image:linear-gradient(to bottom,#fff,#eee);">
-                        <th class="">资产分类</th>
-                        <th class="">资产标题</th>
-                        <th class="">责任人</th>
-                        <th class="">资产编号</th>
-                        <th class="">备注</th>
+                        <th>品牌</th>
+                        <th>型号</th>
+                        <th>序列号</th>
+                        <th>责任人</th>
+                        <th>备注</th>
+                        <th>入库时间</th>
+                        <th>资产编号</th>
                         {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
-                        <th class="">操作</th>
+                        <th>操作</th>
                         {% endif %}
                     </tr>
                 </thead>
                 <tbody>
-                {% for  asset, employee in assets %}
-                    <tr class="uk-visible-hover-inline" id="{{asset.id}}" data-employee-name="{{employee.name}}">
-                        <td id="catagory" class="">{{ asset.catagory|safe }}</td>
-                        <td id="name" class="">{{ asset.name|safe }}</td>
-                        <td id="user" class="">{% if asset.employee_name %}{{ asset.employee_name|safe }}{% elif employee.name %}{{ employee.name }}{% endif %}{% if employee.status == False %}&nbsp;(离职){% endif %}</td>
-                        <td id="serial" class="">{% if asset.serial %}{{ asset.serial|safe }}{% endif %}</td>
-                        <td id="note" class="">{% if asset.note %}{{ asset.note|safe }}{% endif %}</td>
+                    {% for asset in assets %}
+                    <tr class="uk-visible-hover-inline" id="{{asset.id}}" data-employee-name="{{employee_name}}">
+                        <td id="vendor" class="column">{% if asset.vendor %}{{ asset.vendor|safe }}{% endif %}</td>
+                        <td id="model" class="column">{% if asset.model %}{{ asset.model|safe }}{% endif %}</td>
+                        <td id="serial" class="column">{% if asset.serial %}{{ asset.serial|safe }}{% endif %}</td>
+                        <td id="employee_id" class="column">{% if asset.employee_name %}{{ asset.employee_name|safe }}{% endif %}{% if asset.employee_status == False %}&nbsp;(离职){% endif %}</td>
+                        <td id="note" class="column">{% if asset.note %}{{ asset.note|safe }}{% endif %}</td>
+                        <td id="create_time" class="">{% if asset.create_time_str %}{{ asset.create_time_str|safe }}{% endif %}</td>
+                        <td id="asset_sn" class="">{% if asset.asset_sn %}{{ asset.asset_sn|safe }}{% endif %}</td>
                         {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
                         <td  class="">
                             <!-- Operators -->
                             <div>
-                                <a id="{{asset.id}}" class="modify" href="#modifybox" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
+                                <a id="{{asset.id}}" class="modify" href="#displayform" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
                                 <a id="{{asset.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-times-circle"></i></a>
                             </div>
                         </td>
                         {% endif %}
                     </tr>
-                {% endfor %}
+                    {% endfor %}
                 </tbody>
+                {% elif catagory == 'host' %}
+                <thead>
+                    <tr style="background-image:linear-gradient(to bottom,#fff,#eee);">
+                        <th>CPU</th>
+                        <th>内存</th>
+                        <th>主板</th>
+                        <th>显卡</th>
+                        <th>责任人</th>
+                        <th>备注</th>
+                        <th>入库时间</th>
+                        <th>资产编号</th>
+                        {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
+                        <th>操作</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in assets %}
+                    <tr class="uk-visible-hover-inline" id="{{asset.id}}" data-employee-name="{{employee_name}}">
+                        <td id="cpu" class="column">{% if asset.cpu %}{{ asset.cpu|safe }}{% endif %}</td>
+                        <td id="memory" class="column">{% if asset.memory %}{{ asset.memory|safe }}{% endif %}</td>
+                        <td id="motherboard" class="column">{% if asset.motherboard %}{{ asset.motherboard|safe }}{% endif %}</td>
+                        <td id="graphics" class="column">{% if asset.graphics %}{{ asset.graphics|safe }}{% endif %}</td>
+                        <td id="employee_id" class="column">{% if asset.employee_name %}{{ asset.employee_name|safe }}{% endif %}{% if asset.employee_status == False %}&nbsp;(离职){% endif %}</td>
+                        <td id="note" class="column">{% if asset.note %}{{ asset.note|safe }}{% endif %}</td>
+                        <td id="create_time" class="">{% if asset.create_time_str %}{{ asset.create_time_str|safe }}{% endif %}</td>
+                        <td id="asset_sn" class="">{% if asset.asset_sn %}{{ asset.asset_sn|safe }}{% endif %}</td>
+                        {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
+                        <td  class="">
+                            <!-- Operators -->
+                            <div>
+                                <a id="{{asset.id}}" class="modify" href="#hostform" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
+                                <a id="{{asset.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-times-circle"></i></a>
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% elif catagory == 'laptop' %}
+                <thead>
+                    <tr style="background-image:linear-gradient(to bottom,#fff,#eee);">
+                        <th>品牌</th>
+                        <th>型号</th>
+                        <th>序列号</th>
+                        <th>责任人</th>
+                        <th>备注</th>
+                        <th>入库时间</th>
+                        <th>资产编号</th>
+                        {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
+                        <th>操作</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in assets %}
+                    <tr class="uk-visible-hover-inline" id="{{asset.id}}" data-employee-name="{{employee_name}}">
+                        <td id="vendor" class="column">{% if asset.vendor %}{{ asset.vendor|safe }}{% endif %}</td>
+                        <td id="model" class="column">{% if asset.model %}{{ asset.model|safe }}{% endif %}</td>
+                        <td id="serial" class="column">{% if asset.serial %}{{ asset.serial|safe }}{% endif %}</td>
+                        <td id="employee_id" class="column">{% if asset.employee_name %}{{ asset.employee_name|safe }}{% endif %}{% if asset.employee_status == False %}&nbsp;(离职){% endif %}</td>
+                        <td id="note" class="column">{% if asset.note %}{{ asset.note|safe }}{% endif %}</td>
+                        <td id="create_time" class="">{% if asset.create_time_str %}{{ asset.create_time_str|safe }}{% endif %}</td>
+                        <td id="asset_sn" class="">{% if asset.asset_sn %}{{ asset.asset_sn|safe }}{% endif %}</td>
+                        {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
+                        <td  class="">
+                            <!-- Operators -->
+                            <div>
+                                <a id="{{asset.id}}" class="modify" href="#laptopform" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
+                                <a id="{{asset.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-times-circle"></i></a>
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% endif %}
             </table>
-            {% if not assets %}
-            <div class="uk-alert uk-alert-warning">
-                {% if IP_count %}未找到相关内容 ....{% else %}点击左侧网络或使用搜索查找信息{%endif%}
-            </div>
-            {% endif %}
         </div>
 
         <!-- pagination -->
@@ -174,6 +251,125 @@
 
 {% block windows %}
 {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
+    {% if catagory == 'host' %}
+<form action="" class="uk-form uk-form-horizontal" method="POST">
+    {{ form.hidden_tag() }}
+    <div id="hostform" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-pencil-square-o uk-icon-medium" style="color:#07d;"></i><h2>修改台式主机</h2></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">CPU<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                {{ form.cpu }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">内存<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                {{ form.memory }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">主板</label><div class="uk-form-controls">
+                {{ form.motherboard }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">显卡</label><div class="uk-form-controls">
+                {{ form.graphics }}
+            </div></div>
+            
+            <div class="uk-form-row"><label class="uk-form-label">责任人</label><div class="uk-form-controls">
+                {{ form.employee_id }}
+            </div></div>
+            
+            <div class="uk-form-row"><label class="uk-form-label">资产编号</label><div class="uk-form-controls">
+                {{ form.asset_sn }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">备注</label><div class="uk-form-controls">
+                {{ form.note }}
+            </div></div>
+
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-primary">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+    {% elif catagory == 'display' %}
+<form action="" class="uk-form uk-form-horizontal" method="POST">
+    {{ form.hidden_tag() }}
+    <div id="displayform" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-pencil-square-o uk-icon-medium" style="color:#07d;"></i><h2>修改台式主机</h2></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">品牌<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                {{ form.vendor }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">型号<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                {{ form.model }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">序列号</label><div class="uk-form-controls">
+                {{ form.serial }}
+            </div></div>
+            
+            <div class="uk-form-row"><label class="uk-form-label">责任人</label><div class="uk-form-controls">
+                {{ form.employee_id }}
+            </div></div>
+            
+            <div class="uk-form-row"><label class="uk-form-label">资产编号</label><div class="uk-form-controls">
+                {{ form.asset_sn }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">备注</label><div class="uk-form-controls">
+                {{ form.note }}
+            </div></div>
+
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-primary">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+    {% elif catagory == 'laptop' %}
+<form action="" class="uk-form uk-form-horizontal" method="POST">
+    {{ form.hidden_tag() }}
+    <div id="laptopform" class="uk-modal">
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-pencil-square-o uk-icon-medium" style="color:#07d;"></i><h2>修改台式主机</h2></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">品牌<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                {{ form.vendor }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">型号<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
+                {{ form.model }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">序列号</label><div class="uk-form-controls">
+                {{ form.serial }}
+            </div></div>
+            
+            <div class="uk-form-row"><label class="uk-form-label">责任人</label><div class="uk-form-controls">
+                {{ form.employee_id }}
+            </div></div>
+            
+            <div class="uk-form-row"><label class="uk-form-label">资产编号</label><div class="uk-form-controls">
+                {{ form.asset_sn }}
+            </div></div>
+
+            <div class="uk-form-row"><label class="uk-form-label">备注</label><div class="uk-form-controls">
+                {{ form.note }}
+            </div></div>
+
+            <div class="uk-modal-footer uk-text-right">
+                <button class="uk-button uk-modal-close" type="button">取消</button>
+                <button class="uk-button uk-button-primary">确定</button>
+            </div>
+        </div>
+    </div>
+</form>
+    {% else %}
 <form action="{{prefix}}/assets/add/" class="uk-form uk-form-horizontal" method="POST">
     {{ form.hidden_tag() }}
 
@@ -255,5 +451,6 @@
         </div>
     </div>
 </form>
+    {% endif %}
 {% endif %}
 {% endblock %}

@@ -1,38 +1,17 @@
 <html>
-    <head>
-    </head>
-    <body>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                <div class="uk-container-center uk-text-center uk-alert uk-alert-danger uk-width-1-2" data-uk-alert>
-                    错误<span class="uk-margin-left">{{ message }}</span>
-                </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}  
-        <form action="{{prefix}}/departments/add/" method="POST">
-            {{ form.hidden_tag() }}
-            部门名称{{form.name}}{% for error in form.name.errors %}{{ error }}{% endfor %}
-            上级部门{{form.parent}}{% for error in form.parent.errors %}{{ error }}{% endfor %}
-            排列顺序{{form.sequence}}{% for error in form.sequence.errors %}{{ error }}{% endfor %}
-            <br>
-            <input type="submit"/>
-        </form>
-        
-        <div class="departments">
-        </div>
-        
-    </body>
+<head>
+</head>
+<body>
     
-    <script>
-        !function(){
-            var i = null;
-            function x(obj){
-                obj = [1,2,3]
-            }
-            x(i);
-            concole.log(i);
-        }()
-    </script>
+</body>
+    
+<script>
+!function(){
+    test = {name:"bob", age:29};
+    
+    for (p in test) {
+        console.log(test[p]);
+    }
+}()
+</script>
 </html>

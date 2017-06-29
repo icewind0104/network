@@ -1,4 +1,5 @@
 from app import db, mylib
+import time
 
 class departments(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -13,8 +14,12 @@ class employees(db.Model):
     name = db.Column(db.String(64), nullable=False, unique=True)
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id', ondelete='SET NULL'), nullable=True)
     status = db.Column(db.Boolean)
-    assets = db.relationship('assets', backref='assets_user', lazy='dynamic')
+    hosts = db.relationship('hosts', backref='hosts_user', lazy='dynamic')
+    displays = db.relationship('displays', backref='displays_user', lazy='dynamic')
+    laptops = db.relationship('laptops', backref='laptops', lazy='dynamic')
     ips = db.relationship('ips', backref='ips_user', lazy='dynamic', cascade="delete")
+    def to_dict(self):
+        return {'id':self.id, 'name':self.name, 'department_id':self.department_id, 'status':self.status}
 
 class nets(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -66,10 +71,41 @@ class users(db.Model):
     def get_id(self):
         return str(self.id)
 
-class assets(db.Model):
+#class assets(db.Model):
+#    id = db.Column(db.Integer, primary_key=True)
+#    serial = db.Column(db.String(32), nullable=True)
+#    catagory = db.Column(db.String(32), nullable=False)
+#    name = db.Column(db.String(128), nullable=False)
+#    note = db.Column(db.String(64), nullable=True)
+#    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)
+    
+class hosts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    serial = db.Column(db.String(32), nullable=True)
-    catagory = db.Column(db.String(32), nullable=False)
-    name = db.Column(db.String(128), nullable=False)
+    create_time = db.Column(db.Float, nullable=True, default=time.time())
+    cpu = db.Column(db.String(32), nullable=True)
+    memory = db.Column(db.String(16), nullable=True)
+    motherboard = db.Column(db.String(32), nullable=True)
+    graphics = db.Column(db.String(32), nullable=True)
     note = db.Column(db.String(64), nullable=True)
+    asset_sn = db.Column(db.String(32), nullable=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)
+    
+class displays(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    create_time = db.Column(db.Float, nullable=True, default=time.time())
+    vendor = db.Column(db.String(16), nullable=True)
+    model = db.Column(db.String(16), nullable=True)
+    serial = db.Column(db.String(32), nullable=True)
+    note = db.Column(db.String(64), nullable=True)
+    asset_sn = db.Column(db.String(32), nullable=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)
+    
+class laptops(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    create_time = db.Column(db.Float, nullable=True, default=time.time())
+    vendor = db.Column(db.String(16), nullable=True)
+    model = db.Column(db.String(16), nullable=True)
+    serial = db.Column(db.String(32), nullable=True)
+    note = db.Column(db.String(64), nullable=True)
+    asset_sn = db.Column(db.String(32), nullable=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)

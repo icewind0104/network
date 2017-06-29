@@ -40,13 +40,13 @@ class Login(FlaskForm):
     password = PasswordField('password', validators=[DataRequired()], render_kw={'class': 'uk-width-1-1 uk-form-large', 'placeholder': '密码', 'autocomplete': 'off'})
     remember = BooleanField('remember', default='y')
 
-class Asset(RedirectForm):
-    id = IntegerField('id', render_kw={'class':'uk-hidden'})
-    serial= StringField('serial', render_kw={'autocomplete': 'off'})
-    catagory = SelectField('catagory', choices=[('台式主机', '台式主机'), ('显示器', '显示器'), ('笔记本电脑', '笔记本电脑'), ('其他', '其他')])
-    name = StringField('name', validators=[DataRequired()], render_kw={'autocomplete': 'off'})
-    employee_id = NeedSearchIdField('employee_id', related_model='employees', related_column='name', render_kw={'autocomplete': 'off'})
-    note = StringField('note', render_kw={'autocomplete': 'off'})
+#class Asset(RedirectForm):
+#    id = IntegerField('id', render_kw={'class':'uk-hidden'})
+#    serial= StringField('serial', render_kw={'autocomplete': 'off'})
+#    catagory = SelectField('catagory', choices=[('台式主机', '台式主机'), ('显示器', '显示器'), ('笔记本电脑', '笔记本电脑'), ('其他', '其他')])
+#    name = StringField('name', validators=[DataRequired()], render_kw={'autocomplete': 'off'})
+#    employee_id = NeedSearchIdField('employee_id', related_model='employees', related_column='name', render_kw={'autocomplete': 'off'})
+#    note = StringField('note', render_kw={'autocomplete': 'off'})
 
 class Employee(RedirectForm):
     id = IntegerField('id', render_kw={'class':'uk-hidden'})
@@ -60,3 +60,32 @@ class Department(RedirectForm):
     ipstart = StringField('ipstart', render_kw={'autocomplete': 'off'})
     ipend = StringField('ipend', render_kw={'autocomplete': 'off'})
     parent = StringField('parent', render_kw={'autocomplete': 'off', 'class':'uk-hidden'})
+    
+class Host(RedirectForm):
+    id = IntegerField('id', render_kw={'class':'uk-hidden'})
+    cpu = StringField('cpu', render_kw={'autocomplete': 'off'})
+    memory = StringField('memory', render_kw={'autocomplete': 'off'})
+    motherboard = StringField('motherboard', render_kw={'autocomplete': 'off'})
+    graphics = StringField('graphics', render_kw={'autocomplete': 'off'})
+    note = StringField('note', render_kw={'autocomplete': 'off'})
+    asset_sn = StringField('asset_sn', render_kw={'autocomplete': 'off'})
+    employee_id = NeedSearchIdField('employee_id', related_model='employees', related_column='name', render_kw={'autocomplete': 'off'})
+    
+class Display(RedirectForm):
+    id = IntegerField('id', render_kw={'class':'uk-hidden'})
+    vendor = StringField('vendor', render_kw={'autocomplete': 'off'})
+    model = StringField('model', render_kw={'autocomplete': 'off'})
+    serial = StringField('serial', render_kw={'autocomplete': 'off'})
+    note = StringField('note', render_kw={'autocomplete': 'off'})
+    asset_sn = StringField('asset_sn', render_kw={'autocomplete': 'off'})
+    employee_id = NeedSearchIdField('employee_id', related_model='employees', related_column='name', render_kw={'autocomplete': 'off'})
+    
+class Laptop(RedirectForm):
+    id = IntegerField('id', render_kw={'class':'uk-hidden'})
+    vendor = StringField('vendor', render_kw={'autocomplete': 'off'})
+    model = StringField('model', render_kw={'autocomplete': 'off'})
+    serial = StringField('serial', render_kw={'autocomplete': 'off'})
+    note = StringField('note', render_kw={'autocomplete': 'off'})
+    asset_sn = StringField('asset_sn', render_kw={'autocomplete': 'off'})
+    employee_id = NeedSearchIdField('employee_id', related_model='employees', related_column='name', render_kw={'autocomplete': 'off'})
+    

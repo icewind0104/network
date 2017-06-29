@@ -1,6 +1,23 @@
 # -*- coding: utf-8 -*-
 import re
 
+#------------------------------------------
+# FUNCTION: paging(分页)
+#
+# query: sqlalchemy 的 query 对象
+# request: 路由函数就收的 request 对象
+# row_per_page: 每页显示的条目数
+# 返回: 数据库的查询结果
+#------------------------------------------
+
+def paging(query, request, rows_per_page):
+    try:
+        curr_page = int(request.args.get('page', 1))
+        assert curr_page > 0
+    except:
+        curr_page = 1
+    return query[(curr_page-1)*rows_per_page:(curr_page)*rows_per_page]
+
 # 字符串形式 --> 整数形式
 def inet_pton(addr):
     if re.match('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', addr) is None:
@@ -24,16 +41,16 @@ def inet_ntop(addr):
     return '.'.join(res)
 
 class page():
-    def __init__(self, row_count, per_list, curr_page):
+    def __init__(self, row_count, request, per_list):
         self.__row_count = row_count
         self.__per_list = per_list
         self.count = (self.__row_count + self.__per_list-1)//per_list
-        if (curr_page < 1):
+        
+        try:
+            self.curr_page = int(request.args.get('page',1))
+            assert self.curr_page > 0
+        except:
             self.curr_page = 1
-        elif (curr_page > self.count):
-            self.curr_page = self.count
-        else:
-            self.curr_page = curr_page
 
     @property
     def previous_page(self):

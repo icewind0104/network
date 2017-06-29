@@ -117,7 +117,9 @@ a.button:hover{
 #departments li span.operator i{margin: 0 0 0 5px; padding: 0 0 0 0;}
 #departments li.select{background-color: #eee;}
 #departments li.active{background-color: #00a5e6; color: #fff;}
-#departments li.active a{color: #fff;}
+#departments li.active a.name{color: #fff;}
+#departments li.active span a{color: #fff;}
+#departments li.active span a:hover{color: #eee;}
 
 #departments ul.hidden {
     visibility: hidden;
