@@ -37,9 +37,10 @@
             location.href = search;
         });
 
+        // 资产数据添加
         $("A#assetAdd").click(function(e){
-            hostDiv = $($(this).attr("href"));
-            hostDiv.parent().attr("action", "{{prefix}}/{{catagory}}s/add/");
+            assetDiv = $($(this).attr("href"));
+            assetDiv.parent().attr("action", "{{prefix}}/{{catagory}}s/add/");
         })
         
         // 资产数据编辑
@@ -48,13 +49,30 @@
             if ($a.hasClass("modify")) {
                 var i = 0,
                     tds = $a.closest("TR").children("td.column"),
-                    hostDiv = $($a.attr("href"));
+                    assetDiv = $($a.attr("href"));
                 
-                hostDiv.parent().attr("action", "{{prefix}}/{{catagory}}s/update/");
+                assetDiv.parent().attr("action", "{{prefix}}/{{catagory}}s/"+$a.attr("id")+"/update/");
                 
                 for(; i < tds.length; i++) {
-                    hostDiv.find("#"+tds[i].id).val($(tds[i]).text());
+                    assetDiv.find("#"+tds[i].id).val($(tds[i]).text());
                 }
+            }
+        });
+        // 资产数据删除
+        $("table#assetList").click(function(e){
+            var $a = $(e.target).closest("A");
+            if ($a.hasClass("danger")) {
+                var i = 0,
+                    info = "";
+                    tds = $a.closest("TR").children("td.column"),
+                    assetDelDiv = $($a.attr("href"));
+
+                assetDelDiv.parent().attr("action", "{{prefix}}/{{catagory}}s/"+$a.attr("id")+"/delete/");
+                
+                for(; i < tds.length; i++) {
+                    info += $(tds[i]).text()+" ";
+                }
+                assetDelDiv.find(".motion").text(info);
             }
         });
     });
@@ -370,6 +388,7 @@
     </div>
 </form>
     {% else %}
+    {% endif %}
 <form action="{{prefix}}/assets/add/" class="uk-form uk-form-horizontal" method="POST">
     {{ form.hidden_tag() }}
 
@@ -440,8 +459,8 @@
 <form action="" id="ipDelete" class="uk-form" method="POST">
     <div id="deletebox" class="uk-modal">
         <div class="uk-modal-dialog">
-            <div class="uk-modal-header uk-grid"><i class="uk-icon-times-circle uk-icon-medium" style="color:#f00;"></i><h2>删除IP地址</h2></div>
-            确定停用&nbsp;<span class="motion"></span>&nbsp;吗？
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-times-circle uk-icon-medium" style="color:#f00;"></i><h2>删除资产</h2></div>
+            确定删除&nbsp;<span class="motion"></span>&nbsp;吗？
             <input type="text" class="uk-hidden" name="ip_id" id="delete_ip_id">
             <input type="text" class="uk-hidden" name="operate" value="delete">
             <div class="uk-modal-footer uk-text-right">
@@ -451,6 +470,5 @@
         </div>
     </div>
 </form>
-    {% endif %}
 {% endif %}
 {% endblock %}
