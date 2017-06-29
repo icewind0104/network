@@ -158,7 +158,7 @@ def asset(catagory):
     elif unused == 'false':
         session['unused'] = False
     if session.get('unused', False) == True:
-        query = query.filter(or_(models.assets.employee_id == None, models.employees.status == False))
+        query = query.filter(or_(getattr(models, catagory+"s").employee_id == None, models.employees.status == False))
 
     # 页码
     Page = mylib.page(query.count(), request, rows_per_page)
