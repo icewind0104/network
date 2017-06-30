@@ -8,7 +8,7 @@ $('document').ready(function(){
         //修改员工信息
         var t = $(e.target).closest(".emplyMod");
         if (t.length == 1){
-            $("#modifybox #na me").val(t.parent().parent().parent().find('td#name').text());
+            $("#modifybox #name").val(t.parent().parent().parent().find('td#name').text());
             $("#modifybox #department_id").val(parseInt(t[0].dataset.depid));
             $("form#emplyUpdate").attr("action", "{{prefix}}/employees/"+t.attr('id')+"/update/");
         }

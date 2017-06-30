@@ -39,8 +39,13 @@
 
         // 资产数据添加
         $("A#assetAdd").click(function(e){
-            assetDiv = $($(this).attr("href"));
+            var i = 0,
+                assetDiv = $($(this).attr("href")),
+                add_count = assetDiv.find("#add_count");
+                
+            add_count.removeClass("none");
             assetDiv.parent().attr("action", "{{prefix}}/{{catagory}}s/add/");
+            assetDiv.find("input").val("");
         })
         
         // 资产数据编辑
@@ -49,8 +54,10 @@
             if ($a.hasClass("modify")) {
                 var i = 0,
                     tds = $a.closest("TR").children("td.column"),
-                    assetDiv = $($a.attr("href"));
+                    assetDiv = $($a.attr("href")),
+                    add_count = assetDiv.find("#add_count");
                 
+                add_count.addClass("none");
                 assetDiv.parent().attr("action", "{{prefix}}/{{catagory}}s/"+$a.attr("id")+"/update/");
                 
                 for(; i < tds.length; i++) {
@@ -83,7 +90,7 @@
     <ul class="uk-nav uk-nav-side uk-nav-parent-icon">
         {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
         <li>
-            <a id="assetAdd" href="#{{catagory}}form" data-uk-modal><i class="uk-icon-plus-square"></i>&nbsp添加资产</a>
+            <a id="assetAdd" href="#assetform" data-uk-modal><i class="uk-icon-plus-square"></i>&nbsp添加资产</a>
         </li>
         <li class="uk-nav-divider"></li>
         {% endif %}
@@ -147,7 +154,7 @@
                         <td  class="">
                             <!-- Operators -->
                             <div>
-                                <a id="{{asset.id}}" class="modify" href="#displayform" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
+                                <a id="{{asset.id}}" class="modify" href="#assetform" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
                                 <a id="{{asset.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-times-circle"></i></a>
                             </div>
                         </td>
@@ -186,7 +193,7 @@
                         <td  class="">
                             <!-- Operators -->
                             <div>
-                                <a id="{{asset.id}}" class="modify" href="#hostform" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
+                                <a id="{{asset.id}}" class="modify" href="#assetform" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
                                 <a id="{{asset.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-times-circle"></i></a>
                             </div>
                         </td>
@@ -223,7 +230,7 @@
                         <td  class="">
                             <!-- Operators -->
                             <div>
-                                <a id="{{asset.id}}" class="modify" href="#laptopform" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
+                                <a id="{{asset.id}}" class="modify" href="#assetform" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
                                 <a id="{{asset.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-times-circle"></i></a>
                             </div>
                         </td>
@@ -269,13 +276,23 @@
 
 {% block windows %}
 {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
-    {% if catagory == 'host' %}
 <form action="" class="uk-form uk-form-horizontal" method="POST">
     {{ form.hidden_tag() }}
-    <div id="hostform" class="uk-modal">
+    <div id="assetform" class="uk-modal">
         <div class="uk-modal-dialog">
             <div class="uk-modal-header uk-grid"><i class="uk-icon-pencil-square-o uk-icon-medium" style="color:#07d;"></i><h2>修改台式主机</h2></div>
 
+            <div id="add_count" class="uk-form-row"><label class="uk-form-label">添加数量</label><div class="uk-form-controls">
+                <select name="add_count" value="1">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+            </div></div>
+            
+            {% if catagory == 'host' %}
+            
             <div class="uk-form-row"><label class="uk-form-label">CPU<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
                 {{ form.cpu }}
             </div></div>
@@ -292,32 +309,8 @@
                 {{ form.graphics }}
             </div></div>
             
-            <div class="uk-form-row"><label class="uk-form-label">责任人</label><div class="uk-form-controls">
-                {{ form.employee_id }}
-            </div></div>
+            {% elif catagory == 'display' %}
             
-            <div class="uk-form-row"><label class="uk-form-label">资产编号</label><div class="uk-form-controls">
-                {{ form.asset_sn }}
-            </div></div>
-
-            <div class="uk-form-row"><label class="uk-form-label">备注</label><div class="uk-form-controls">
-                {{ form.note }}
-            </div></div>
-
-            <div class="uk-modal-footer uk-text-right">
-                <button class="uk-button uk-modal-close" type="button">取消</button>
-                <button class="uk-button uk-button-primary">确定</button>
-            </div>
-        </div>
-    </div>
-</form>
-    {% elif catagory == 'display' %}
-<form action="" class="uk-form uk-form-horizontal" method="POST">
-    {{ form.hidden_tag() }}
-    <div id="displayform" class="uk-modal">
-        <div class="uk-modal-dialog">
-            <div class="uk-modal-header uk-grid"><i class="uk-icon-pencil-square-o uk-icon-medium" style="color:#07d;"></i><h2>修改台式主机</h2></div>
-
             <div class="uk-form-row"><label class="uk-form-label">品牌<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
                 {{ form.vendor }}
             </div></div>
@@ -330,32 +323,8 @@
                 {{ form.serial }}
             </div></div>
             
-            <div class="uk-form-row"><label class="uk-form-label">责任人</label><div class="uk-form-controls">
-                {{ form.employee_id }}
-            </div></div>
+            {% elif catagory == 'laptop' %}
             
-            <div class="uk-form-row"><label class="uk-form-label">资产编号</label><div class="uk-form-controls">
-                {{ form.asset_sn }}
-            </div></div>
-
-            <div class="uk-form-row"><label class="uk-form-label">备注</label><div class="uk-form-controls">
-                {{ form.note }}
-            </div></div>
-
-            <div class="uk-modal-footer uk-text-right">
-                <button class="uk-button uk-modal-close" type="button">取消</button>
-                <button class="uk-button uk-button-primary">确定</button>
-            </div>
-        </div>
-    </div>
-</form>
-    {% elif catagory == 'laptop' %}
-<form action="" class="uk-form uk-form-horizontal" method="POST">
-    {{ form.hidden_tag() }}
-    <div id="laptopform" class="uk-modal">
-        <div class="uk-modal-dialog">
-            <div class="uk-modal-header uk-grid"><i class="uk-icon-pencil-square-o uk-icon-medium" style="color:#07d;"></i><h2>修改台式主机</h2></div>
-
             <div class="uk-form-row"><label class="uk-form-label">品牌<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
                 {{ form.vendor }}
             </div></div>
@@ -368,6 +337,8 @@
                 {{ form.serial }}
             </div></div>
             
+            {% endif %}
+            
             <div class="uk-form-row"><label class="uk-form-label">责任人</label><div class="uk-form-controls">
                 {{ form.employee_id }}
             </div></div>
@@ -387,75 +358,8 @@
         </div>
     </div>
 </form>
-    {% else %}
-    {% endif %}
-<form action="{{prefix}}/assets/add/" class="uk-form uk-form-horizontal" method="POST">
-    {{ form.hidden_tag() }}
 
-    <div id="netaddbox" class="uk-modal">
-        <div class="uk-modal-dialog">
-            <div class="uk-modal-header uk-grid"><i class="uk-icon-plus uk-icon-medium" style="color:#8CC14C;"></i><h2>添加新网络</h2></div>
 
-            <div class="uk-form-row"><label class="uk-form-label">资产分类<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
-                {{ form.catagory }}
-            </div></div>
-
-            <div class="uk-form-row"><label class="uk-form-label">资产标题<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
-                {{ form.name }}
-            </div></div>
-
-            <div class="uk-form-row"><label class="uk-form-label">责任人</label><div class="uk-form-controls">
-                {{ form.employee_id }}
-            </div></div>
-
-            <div class="uk-form-row"><label class="uk-form-label">资产编号</label><div class="uk-form-controls">
-                {{ form.serial }}
-            </div></div>
-
-            <div class="uk-form-row"><label class="uk-form-label">资产备注</label><div class="uk-form-controls">
-                {{ form.note }}
-            </div></div>
-
-            <div class="uk-modal-footer uk-text-right">
-                <button class="uk-button uk-modal-close" type="button">取消</button>
-                <button class="uk-button uk-button-primary" type="submit">确定</button>
-            </div>
-        </div>
-    </div>
-</form>
-<form action="" id="ipUpdate" class="uk-form uk-form-horizontal" method="POST">
-    {{ form.hidden_tag() }}
-    <div id="modifybox" class="uk-modal">
-        <div class="uk-modal-dialog">
-            <div class="uk-modal-header uk-grid"><i class="uk-icon-pencil-square-o uk-icon-medium" style="color:#07d;"></i><h2>修改使用人</h2></div>
-
-            <div class="uk-form-row"><label class="uk-form-label">资产分类<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
-                {{ form.catagory }}
-            </div></div>
-
-            <div class="uk-form-row"><label class="uk-form-label">资产标题<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
-                {{ form.name }}
-            </div></div>
-
-            <div class="uk-form-row"><label class="uk-form-label">责任人</label><div class="uk-form-controls">
-                {{ form.employee_id }}
-            </div></div>
-
-            <div class="uk-form-row"><label class="uk-form-label">资产编号</label><div class="uk-form-controls">
-                {{ form.serial }}
-            </div></div>
-
-            <div class="uk-form-row"><label class="uk-form-label">资产备注</label><div class="uk-form-controls">
-                {{ form.note }}
-            </div></div>
-
-            <div class="uk-modal-footer uk-text-right">
-                <button class="uk-button uk-modal-close" type="button">取消</button>
-                <button class="uk-button uk-button-primary">确定</button>
-            </div>
-        </div>
-    </div>
-</form>
 <form action="" id="ipDelete" class="uk-form" method="POST">
     <div id="deletebox" class="uk-modal">
         <div class="uk-modal-dialog">

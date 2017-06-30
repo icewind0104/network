@@ -544,6 +544,7 @@ def create_model_func(model, Form, form_func=None):
                                 value = False
                             if value == '1':
                                 value = True
+                        # 搜索名字对应ID再插入
                         elif isinstance(each, NeedSearchIdField):
                             rl_model = getattr(models, each.related_model)
                             related_model =  rl_model.query.filter_by(**{each.related_column:value}).first()
@@ -553,9 +554,12 @@ def create_model_func(model, Form, form_func=None):
                             else:
                                 value = related_model.id
                         kw.update({key:value})
-            obj = model(**kw)
             try:
-                db.session.add(obj)
+                # 一次插入最多不超过4条
+                assert int(request.form['add_count']) < 5
+                for i in range(int(request.form['add_count'])):
+                    obj = model(**kw)
+                    db.session.add(obj)
                 db.session.commit()
             except:
                 flash('添加失败')

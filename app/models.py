@@ -81,7 +81,7 @@ class users(db.Model):
     
 class hosts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    create_time = db.Column(db.Float, nullable=True, default=time.time())
+    create_time = db.Column(db.Float, nullable=True, default=time.time)
     cpu = db.Column(db.String(32), nullable=True)
     memory = db.Column(db.String(16), nullable=True)
     motherboard = db.Column(db.String(32), nullable=True)
@@ -92,7 +92,7 @@ class hosts(db.Model):
     
 class displays(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    create_time = db.Column(db.Float, nullable=True, default=time.time())
+    create_time = db.Column(db.Float, nullable=True, default=time.time)
     vendor = db.Column(db.String(16), nullable=True)
     model = db.Column(db.String(16), nullable=True)
     serial = db.Column(db.String(32), nullable=True)
@@ -102,7 +102,7 @@ class displays(db.Model):
     
 class laptops(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    create_time = db.Column(db.Float, nullable=True, default=time.time())
+    create_time = db.Column(db.Float, nullable=True, default=time.time)
     vendor = db.Column(db.String(16), nullable=True)
     model = db.Column(db.String(16), nullable=True)
     serial = db.Column(db.String(32), nullable=True)
