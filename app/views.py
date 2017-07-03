@@ -556,12 +556,18 @@ def create_model_func(model, Form, form_func=None):
                         kw.update({key:value})
             try:
                 # 一次插入最多不超过4条
-                assert int(request.form['add_count']) < 5
-                for i in range(int(request.form['add_count'])):
+                add_count = int(request.form.get('add_count', 1))
+                
+                assert add_count > 0 and add_count < 5
+                
+                for i in range(add_count):
                     obj = model(**kw)
                     db.session.add(obj)
+                    
                 db.session.commit()
-            except:
+                
+            except Exception as e:
+                print(e)
                 flash('添加失败')
         else:
             flash('表单填写无效')

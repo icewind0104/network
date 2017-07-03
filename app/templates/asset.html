@@ -276,6 +276,7 @@
 
 {% block windows %}
 {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
+<!-- 页面弹框 -->
 <form action="" class="uk-form uk-form-horizontal" method="POST">
     {{ form.hidden_tag() }}
     <div id="assetform" class="uk-modal">
@@ -292,25 +293,29 @@
             </div></div>
             
             {% if catagory == 'host' %}
-            
-            <div class="uk-form-row"><label class="uk-form-label">CPU<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
-                {{ form.cpu }}
-            </div></div>
+            <!-- 台式主机 -->
+            <div class="uk-form-row">
+                <label class="uk-form-label">CPU<span style="color:#07d;">（必填）</span></label>
+                <div class="uk-form-controls">{{ form.cpu }}</div>
+            </div>
 
-            <div class="uk-form-row"><label class="uk-form-label">内存<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
-                {{ form.memory }}
-            </div></div>
+            <div class="uk-form-row">
+                <label class="uk-form-label">内存<span style="color:#07d;">（必填）</span></label>
+                <div class="uk-form-controls">{{ form.memory }}</div>
+            </div>
 
-            <div class="uk-form-row"><label class="uk-form-label">主板</label><div class="uk-form-controls">
-                {{ form.motherboard }}
-            </div></div>
+            <div class="uk-form-row">
+                <label class="uk-form-label">主板</label>
+                <div class="uk-form-controls">{{ form.motherboard }}</div>
+            </div>
 
-            <div class="uk-form-row"><label class="uk-form-label">显卡</label><div class="uk-form-controls">
-                {{ form.graphics }}
-            </div></div>
+            <div class="uk-form-row">
+                <label class="uk-form-label">显卡</label>
+                <div class="uk-form-controls">{{ form.graphics }}</div>
+            </div>
             
             {% elif catagory == 'display' %}
-            
+            <!-- 显示器 -->
             <div class="uk-form-row"><label class="uk-form-label">品牌<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
                 {{ form.vendor }}
             </div></div>
@@ -324,7 +329,7 @@
             </div></div>
             
             {% elif catagory == 'laptop' %}
-            
+            <!-- 笔记本电脑 -->
             <div class="uk-form-row"><label class="uk-form-label">品牌<span style="color:#07d;">（必填）</span></label><div class="uk-form-controls">
                 {{ form.vendor }}
             </div></div>
