@@ -47,7 +47,7 @@ def sync2gateway(addr, opt, title=None, mac=None):
         req = request.Request('http://192.168.0.1/arp_static.asp?n=&i=%s&m=&t=1&d=lan&opt=del&_=%d' % (addr, now))
         
     req.add_header('Cookie', 'wys_userid=admin,wys_passwd=5364728ACB0AEEFE362FD4FF6B5FA415')
-    f = request.urlopen(req, timeout=30)
+    f = request.urlopen(req, timeout=60)
     
     # 检测是否写入网关
     try:
