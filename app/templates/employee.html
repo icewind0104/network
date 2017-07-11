@@ -323,10 +323,13 @@ $('document').ready(function(){
                     $clickDepBar.addClass("active");
                     $currDepBar = $clickDepBar;
                     $clickDepBar = null;
+                    if (department == 0) {
+                        $('a.depAdd').addClass('disabled');
+                    } else {
+                        $('a.depAdd').removeClass('disabled');
+                    }
                 } else {
                     // 数据获取失败
-                    updatePage(1, 1)                    //更新页码栏
-                    $("div#ListPrompt *").remove();
                     alert("数据加载失败");
                 }
             });

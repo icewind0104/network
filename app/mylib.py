@@ -1,5 +1,67 @@
 # -*- coding: utf-8 -*-
-import re
+import re, time, gzip
+from urllib import request, parse
+
+#------------------------------------------
+# FUNCTION: check_mac(检查MAC合法性)
+#------------------------------------------
+
+def check_mac(mac):
+    check = True
+    tmp = mac.split(':')
+
+    if len(tmp) != 6:
+        check = False
+
+    for each in mac.split(':'):
+        try:
+            if int(each, 16) < 0 or int(each, 16) > 255:
+                check = False
+        except:
+            check = False
+
+    return check
+
+#------------------------------------------
+# FUNCTION: sync2gateway(同步到网关)
+#
+# addr: 字符串形式的IP地址
+# title: 对于改条记录的描述，一般采用使用人姓名
+# mac: 对应的mac地址
+#------------------------------------------
+
+def sync2gateway(addr, opt, title=None, mac=None):
+    now = int(time.time()*1000)
+    ret = {'status': True, 'error': None}
+
+    if opt == 'mod' or opt == 'add':
+        title = parse.quote(title.encode('gb2312'))
+        
+        if not check_mac(mac):
+            ret['status'] = False
+            ret['error'] = 'MAC地址不合法'
+        
+        req = request.Request('http://192.168.0.1/arp_static.asp?n=%s&i=%s&m=%s&t=1&d=lan&opt=mod&_=%d' % (title, addr, mac, now))
+
+    if opt == 'del':
+        req = request.Request('http://192.168.0.1/arp_static.asp?n=&i=%s&m=&t=1&d=lan&opt=del&_=%d' % (addr, now))
+        
+    req.add_header('Cookie', 'wys_userid=admin,wys_passwd=5364728ACB0AEEFE362FD4FF6B5FA415')
+    f = request.urlopen(req, timeout=30)
+    
+    # 检测是否写入网关
+    try:
+        response_text = gzip.decompress(f.read()).decode('gb2312')
+    except:
+        response_text = f.read().decode('gb2312')
+        
+    status = response_text.split(':', 1)[0]
+    
+    if status == '{err':
+        ret['status'] = False
+        ret['error'] = '网关返回错误:%s' % response_text
+    
+    return ret
 
 #------------------------------------------
 # FUNCTION: paging(分页)

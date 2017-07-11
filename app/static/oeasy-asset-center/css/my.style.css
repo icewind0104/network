@@ -134,3 +134,9 @@ a.button:hover{
     color: #bbb;
     cursor: default;
 }
+
+a.disabled{
+    color: #bbb;
+    cursor: default;
+    text-decoration: none;
+}

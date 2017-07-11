@@ -1,5 +1,6 @@
 <html>
 <head>
+    <script src="/oeasy-asset-center/js/jquery.js"></script>
 </head>
 <body>
     
@@ -7,11 +8,17 @@
     
 <script>
 !function(){
-    test = {name:"bob", age:29};
-    
-    for (p in test) {
-        console.log(test[p]);
-    }
+    $.ajax({
+			   type: "GET",
+			   url: "{{prefix}}/find_mac/192.168.6.21/",
+			   success: function(msg){console.log(msg)},
+			   timeout: 120000,     
+			   error: function(){},
+			   dataType: "json"	,
+			   dofun:function(){},
+			   block_time:0,
+			   cache:false     
+        });
 }()
 </script>
 </html>

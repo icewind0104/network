@@ -4,8 +4,9 @@ from flask import render_template, flash, redirect, url_for, g, request, session
 from app.forms import Net, Ip, Login, Host, Display, Laptop, Employee, Department, BooleanSelectField, NeedSearchIdField
 from wtforms import StringField
 from sqlalchemy import or_
+from urllib import request as request2, parse
 from flask_login import login_required, login_user, logout_user, current_user
-import re, urllib, wtforms, json, time
+import re, urllib, wtforms, json, time, gzip, urllib
 
 prefix = app.config['MOUNT_POINT']
 
@@ -41,6 +42,18 @@ def logout():
     return redirect(url_for('index'))
 
 # --------- User Manage [ END ] ----------
+
+#--------------------------------------------
+#   find_mac
+#--------------------------------------------
+
+@app.route('/find_mac/<string:ipaddr>/')
+def find_mac(ipaddr):
+    req = request2.Request('http://192.168.0.1/find_mac.asp?ip='+ipaddr)
+    req.add_header('Cookie', 'wys_userid=admin,wys_passwd=5364728ACB0AEEFE362FD4FF6B5FA415')
+    f = request2.urlopen(req, timeout=12)
+    
+    return f.read().decode('gb2312')
 
 #--------------------------------------------
 #   IP - /
@@ -376,17 +389,32 @@ def department_update(id):
 def ip_add():
     form = Ip()
     if form.validate_on_submit():
+        # 检查员工是否存在
         employee = models.employees.query.filter_by(name=form.user.data).first()
         if employee is None:
             flash('IP地址启用失败: 未找到员工 %s' % form.user.data)
             return form.redirect()
 
-        ip = models.ips(addr = form.addr.data,
-                        addr_str = mylib.inet_ntop(form.addr.data),
-                        employee_id = employee.id,
-                        mac = form.mac.data,
-                        device = form.device.data,
-                        net = form.net.data)
+        # 同步到网关
+        if request.form.get('sync', None) != None:
+            res = mylib.sync2gateway(
+                                        addr    = mylib.inet_ntop(form.addr.data),
+                                        title   = form.user.data,
+                                        mac     = form.mac.data,
+                                        opt     = 'add'
+                                    )
+            if res['status'] == False:
+                flash('网关同步失败:'+res['error'])
+
+        # 写入数据库
+        ip = models.ips(
+                            addr        = form.addr.data,
+                            addr_str    = mylib.inet_ntop(form.addr.data),
+                            employee_id = employee.id,
+                            mac         = form.mac.data,
+                            device      = form.device.data,
+                            net         = form.net.data
+                       )
         try:
             db.session.add(ip)
             db.session.commit()
@@ -394,20 +422,32 @@ def ip_add():
             db.session.rollback()
             print(e)
             flash('IP地址启用失败')
+
     return form.redirect()
 
 @app.route('/ip/<int:ID>/delete/', methods=['GET', 'POST'])
 @login_required
 def ip_delete(ID):
     form = Ip()
-    try:
-        ip = models.ips.query.get(ID)
-        db.session.delete(ip)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        print(e)
-        flash('IP地址停用失败')
+    ip = models.ips.query.get(ID)
+    
+    if ip != None:
+        # 同步到网关
+        if request.form.get('sync', None) != None:
+            res = mylib.sync2gateway(addr=ip.addr_str, opt='del')
+            if res['status'] == False:
+                flash('网关同步失败:'+res['error'])
+
+        try:
+            db.session.delete(ip)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(e)
+            flash('IP地址停用失败: 数据库操作失败')
+    else:
+        flash('IP地址停用失败: 主键对应的IP地址不存在(%d)' % ID)
+        
     return form.redirect()
 
 @app.route('/ip/<int:ID>/update/', methods=['GET', 'POST'])
@@ -415,7 +455,7 @@ def ip_delete(ID):
 def ip_update(ID):
     form = Ip()
     if form.validate_on_submit():
-        employee = models.employees.query.filter_by(name=form.user.data).first()
+        employee = models.employees.query.filter_by(name=form.user.data).one()
         if employee is None:
             flash('IP地址更新失败: 未找到员工 %s' % form.user.data)
             return form.redirect()
@@ -424,6 +464,13 @@ def ip_update(ID):
         ip.employee_id = employee.id
         ip.mac = form.mac.data
         ip.device = form.device.data
+        
+        # 同步到网关
+        if request.form.get('sync', None) != None:
+            res = mylib.sync2gateway(addr=ip.addr_str, title=form.user.data, mac=ip.mac, opt='mod')
+            if res['status'] == False:
+                flash('网关同步失败:'+res['error'])
+        
         try:
             db.session.commit()
         except Exception as e:

@@ -41,12 +41,14 @@
         $("A#assetAdd").click(function(e){
             var i = 0,
                 assetDiv = $($(this).attr("href")),
-                add_count = assetDiv.find("#add_count");
+                add_count = assetDiv.find("#add_count"),
+                header = assetDiv.find("div.uk-modal-header");
                 
             add_count.removeClass("none");
             assetDiv.parent().attr("action", "{{prefix}}/{{catagory}}s/add/");
             assetDiv.find("input").val("");
-        })
+            header.html("<i class='uk-icon-plus-square uk-icon-medium' style='color:#8CC14C;'></i><h2>添加资产</h2>");
+        });
         
         // 资产数据编辑
         $("table#assetList").click(function(e){
@@ -55,13 +57,15 @@
                 var i = 0,
                     tds = $a.closest("TR").children("td.column"),
                     assetDiv = $($a.attr("href")),
-                    add_count = assetDiv.find("#add_count");
+                    add_count = assetDiv.find("#add_count"),
+                    header = assetDiv.find("div.uk-modal-header");
                 
                 add_count.addClass("none");
                 assetDiv.parent().attr("action", "{{prefix}}/{{catagory}}s/"+$a.attr("id")+"/update/");
+                header.html("<i class='uk-icon-pencil-square-o uk-icon-medium' style='color:#07d;'></i><h2>修改资产</h2>");
                 
                 for(; i < tds.length; i++) {
-                    assetDiv.find("#"+tds[i].id).val($(tds[i]).text());
+                    assetDiv.find("#"+tds[i].id).val($(tds[i]).data("value"));
                 }
             }
         });
@@ -125,88 +129,22 @@
         <div class="uk-overflow-container">
             <table id="assetList" class="uk-table uk-text-nowrap uk-table-hover uk-table-striped">
                 <!-- host -->
-                {% if catagory == 'display' %}
                 <thead>
                     <tr style="background-image:linear-gradient(to bottom,#fff,#eee);">
+                        {% if catagory == 'display' %}
                         <th>品牌</th>
                         <th>型号</th>
                         <th>序列号</th>
-                        <th>责任人</th>
-                        <th>备注</th>
-                        <th>入库时间</th>
-                        <th>资产编号</th>
-                        {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
-                        <th>操作</th>
-                        {% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for asset in assets %}
-                    <tr class="uk-visible-hover-inline" id="{{asset.id}}" data-employee-name="{{employee_name}}">
-                        <td id="vendor" class="column">{% if asset.vendor %}{{ asset.vendor|safe }}{% endif %}</td>
-                        <td id="model" class="column">{% if asset.model %}{{ asset.model|safe }}{% endif %}</td>
-                        <td id="serial" class="column">{% if asset.serial %}{{ asset.serial|safe }}{% endif %}</td>
-                        <td id="employee_id" class="column">{% if asset.employee_name %}{{ asset.employee_name|safe }}{% endif %}{% if asset.employee_status == False %}&nbsp;(离职){% endif %}</td>
-                        <td id="note" class="column">{% if asset.note %}{{ asset.note|safe }}{% endif %}</td>
-                        <td id="create_time" class="">{% if asset.create_time_str %}{{ asset.create_time_str|safe }}{% endif %}</td>
-                        <td id="asset_sn" class="">{% if asset.asset_sn %}{{ asset.asset_sn|safe }}{% endif %}</td>
-                        {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
-                        <td  class="">
-                            <!-- Operators -->
-                            <div>
-                                <a id="{{asset.id}}" class="modify" href="#assetform" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
-                                <a id="{{asset.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-times-circle"></i></a>
-                            </div>
-                        </td>
-                        {% endif %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-                {% elif catagory == 'host' %}
-                <thead>
-                    <tr style="background-image:linear-gradient(to bottom,#fff,#eee);">
+                        {% elif catagory == 'host' %}
                         <th>CPU</th>
                         <th>内存</th>
                         <th>主板</th>
                         <th>显卡</th>
-                        <th>责任人</th>
-                        <th>备注</th>
-                        <th>入库时间</th>
-                        <th>资产编号</th>
-                        {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
-                        <th>操作</th>
-                        {% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for asset in assets %}
-                    <tr class="uk-visible-hover-inline" id="{{asset.id}}" data-employee-name="{{employee_name}}">
-                        <td id="cpu" class="column">{% if asset.cpu %}{{ asset.cpu|safe }}{% endif %}</td>
-                        <td id="memory" class="column">{% if asset.memory %}{{ asset.memory|safe }}{% endif %}</td>
-                        <td id="motherboard" class="column">{% if asset.motherboard %}{{ asset.motherboard|safe }}{% endif %}</td>
-                        <td id="graphics" class="column">{% if asset.graphics %}{{ asset.graphics|safe }}{% endif %}</td>
-                        <td id="employee_id" class="column">{% if asset.employee_name %}{{ asset.employee_name|safe }}{% endif %}{% if asset.employee_status == False %}&nbsp;(离职){% endif %}</td>
-                        <td id="note" class="column">{% if asset.note %}{{ asset.note|safe }}{% endif %}</td>
-                        <td id="create_time" class="">{% if asset.create_time_str %}{{ asset.create_time_str|safe }}{% endif %}</td>
-                        <td id="asset_sn" class="">{% if asset.asset_sn %}{{ asset.asset_sn|safe }}{% endif %}</td>
-                        {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
-                        <td  class="">
-                            <!-- Operators -->
-                            <div>
-                                <a id="{{asset.id}}" class="modify" href="#assetform" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>
-                                <a id="{{asset.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-times-circle"></i></a>
-                            </div>
-                        </td>
-                        {% endif %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-                {% elif catagory == 'laptop' %}
-                <thead>
-                    <tr style="background-image:linear-gradient(to bottom,#fff,#eee);">
+                        {% elif catagory == 'laptop' %}
                         <th>品牌</th>
                         <th>型号</th>
                         <th>序列号</th>
+                        {% endif %}
                         <th>责任人</th>
                         <th>备注</th>
                         <th>入库时间</th>
@@ -218,14 +156,25 @@
                 </thead>
                 <tbody>
                     {% for asset in assets %}
-                    <tr class="uk-visible-hover-inline" id="{{asset.id}}" data-employee-name="{{employee_name}}">
-                        <td id="vendor" class="column">{% if asset.vendor %}{{ asset.vendor|safe }}{% endif %}</td>
-                        <td id="model" class="column">{% if asset.model %}{{ asset.model|safe }}{% endif %}</td>
-                        <td id="serial" class="column">{% if asset.serial %}{{ asset.serial|safe }}{% endif %}</td>
-                        <td id="employee_id" class="column">{% if asset.employee_name %}{{ asset.employee_name|safe }}{% endif %}{% if asset.employee_status == False %}&nbsp;(离职){% endif %}</td>
-                        <td id="note" class="column">{% if asset.note %}{{ asset.note|safe }}{% endif %}</td>
-                        <td id="create_time" class="">{% if asset.create_time_str %}{{ asset.create_time_str|safe }}{% endif %}</td>
-                        <td id="asset_sn" class="">{% if asset.asset_sn %}{{ asset.asset_sn|safe }}{% endif %}</td>
+                    <tr class="uk-visible-hover-inline">
+                        {% if catagory == 'display' %}
+                        <td id="vendor" data-value="{% if asset.vendor %}{{ asset.vendor }}{% endif %}" class="column">{% if asset.vendor %}{{ asset.vendor|safe }}{% endif %}</td>
+                        <td id="model" data-value="{% if asset.model %}{{ asset.model }}{% endif %}" class="column">{% if asset.model %}{{ asset.model|safe }}{% endif %}</td>
+                        <td id="serial" data-value="{% if asset.serial %}{{ asset.serial }}{% endif %}" class="column">{% if asset.serial %}{{ asset.serial|safe }}{% endif %}</td>
+                        {% elif catagory == 'host' %}
+                        <td id="cpu" data-value="{% if asset.cpu %}{{ asset.cpu }}{% endif %}" class="column">{% if asset.cpu %}{{ asset.cpu|safe }}{% endif %}</td>
+                        <td id="memory" data-value="{% if asset.memory %}{{ asset.memory }}{% endif %}" class="column">{% if asset.memory %}{{ asset.memory|safe }}{% endif %}</td>
+                        <td id="motherboard" data-value="{% if asset.motherboard %}{{ asset.motherboard }}{% endif %}" class="column">{% if asset.motherboard %}{{ asset.motherboard|safe }}{% endif %}</td>
+                        <td id="graphics" data-value="{% if asset.graphics %}{{ asset.graphics }}{% endif %}" class="column">{% if asset.graphics %}{{ asset.graphics|safe }}{% endif %}</td>
+                        {% elif catagory == 'laptop' %}
+                        <td id="vendor" data-value="{% if asset.vendor %}{{ asset.vendor }}{% endif %}" class="column">{% if asset.vendor %}{{ asset.vendor|safe }}{% endif %}</td>
+                        <td id="model" data-value="{% if asset.model %}{{ asset.model }}{% endif %}" class="column">{% if asset.model %}{{ asset.model|safe }}{% endif %}</td>
+                        <td id="serial" data-value="{% if asset.serial %}{{ asset.serial }}{% endif %}" class="column">{% if asset.serial %}{{ asset.serial|safe }}{% endif %}</td>
+                        {% endif %}
+                        <td id="employee_id" data-value="{% if asset.employee_name %}{{ asset.employee_name }}{% endif %}" class="column">{% if asset.employee_name %}{{ asset.employee_name|safe }}{% endif %}{% if asset.employee_status == False %}&nbsp;(离职){% endif %}</td>
+                        <td id="note" data-value="{% if asset.note %}{{ asset.note }}{% endif %}" class="column">{% if asset.note %}{{ asset.note|safe }}{% endif %}</td>
+                        <td id="create_time" data-value="{% if asset.create_time_str %}{{ asset.create_time_str }}{% endif %}" class="">{% if asset.create_time_str %}{{ asset.create_time_str|safe }}{% endif %}</td>
+                        <td id="asset_sn" data-value="{% if asset.asset_sn %}{{ asset.asset_sn }}{% endif %}" class="">{% if asset.asset_sn %}{{ asset.asset_sn|safe }}{% endif %}</td>
                         {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
                         <td  class="">
                             <!-- Operators -->
@@ -238,7 +187,6 @@
                     </tr>
                     {% endfor %}
                 </tbody>
-                {% endif %}
             </table>
         </div>
 

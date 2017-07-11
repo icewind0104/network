@@ -29,11 +29,12 @@ class Net(RedirectForm):
 
 class Ip(RedirectForm):
     id = IntegerField('id', render_kw={'class':'uk-hidden'})
-    addr = StringField('addr', render_kw={'class':'uk-hidden'})
+    addr = StringField('addr')
     user = StringField('user', validators=[DataRequired()], render_kw={'autocomplete': 'off'})
     mac = StringField('mac', render_kw={'autocomplete': 'off'})
     device = TextAreaField('device', render_kw={'autocomplet': 'off', 'cols':'40', 'rows':'2'})
-    net = IntegerField('net', render_kw={'class':'uk-hidden'})
+    net = IntegerField('net')
+    sync = BooleanField('sync', default="sync")
 
 class Login(FlaskForm):
     username = StringField('username', validators=[DataRequired()], render_kw={'class': 'uk-width-1-1 uk-form-large', 'placeholder': '登录名', 'autocomplete': 'off'})

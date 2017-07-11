@@ -2,32 +2,103 @@
 
 {% block head %}
 <script type="text/javascript">
-    $('document').ready(function(){
-        //alert('hello world!')
-        $("a.success").click(
-            function(){
-                $("#usebox #addr").val($(this).attr('id'));
-                $("form#ipAdd").attr("action", "{{prefix}}/ip/add/");
-            });
-
-        $("a.modify").click(
-            function(){
-                //$("#modifybox #addr").val($(this).attr('id'));
-                $("#modifybox #user").val($(this).parent().parent().parent().attr("data-employee-name"));
-                $("#modifybox #mac").val($(this).parent().parent().parent().find('td#mac').text());
-                $("#modifybox #device").val($(this).parent().parent().parent().find('td#device').text());
-                $("form#ipUpdate").attr("action", "{{prefix}}/ip/"+$(this).attr('id')+"/update/");
-            });
-
-        $("a.danger").click(
-            function(){
-                $("#deletebox").find(".motion").text(
-                    $(this).parent().parent().parent().find("#user").text()+$(this).parent().parent().parent().find("#addr").text()
-                );
-                $("form#ipDelete").attr("action", "{{prefix}}/ip/"+$(this).attr('id')+"/delete/");
-            });
-
+$('document').ready(function(){
+    // IP地址数据添加
+    $("table#ipList").click(function(e){
+        var $a = $(e.target).closest("A");
+        if ($a.hasClass("success")) {
+            var i = 0,
+                assetDiv = $($a.attr("href")),
+                header = assetDiv.find("div.uk-modal-header");
+            
+            header.html("<i class='uk-icon-plus-square uk-icon-medium' style='color:#8CC14C;'></i><h2>启用IP地址</h2>");
+            assetDiv.parent().attr("action", "{{prefix}}/ip/add/");
+            assetDiv.find("input:not(#net),textarea").val("");
+            assetDiv.find("input#addr").val($a.attr("id"));
+            assetDiv.find("input#addr_str").val($a.closest("TR").children("td#addr_str").text());
+        }
     });
+
+    // IP地址数据编辑
+    $("table#ipList").click(function(e){
+        var $a = $(e.target).closest("A");
+        if ($a.hasClass("modify")) {
+            var i = 0,
+                tds = $a.closest("TR").children("td.column"),
+                assetDiv = $($a.attr("href")),
+                header = assetDiv.find("div.uk-modal-header");
+            
+            header.html("<i class='uk-icon-pencil-square-o uk-icon-medium' style='color:#07d;'></i><h2>修改IP地址</h2>");
+            assetDiv.parent().attr("action", "{{prefix}}/ip/"+$a.attr("id")+"/update/");
+            
+            for(; i < tds.length; i++) {
+                assetDiv.find("#"+tds[i].id).val($(tds[i]).data("value"));
+            }
+        }
+    });
+
+    // IP地址数据删除
+    $("table#ipList").click(function(e){
+        var $a = $(e.target).closest("A");
+        if ($a.hasClass("danger")) {
+            var i = 0,
+                info = "";
+                tds = $a.closest("TR").children("td.column"),
+                assetDelDiv = $($a.attr("href"));
+
+            assetDelDiv.parent().attr("action", "{{prefix}}/ip/"+$a.attr("id")+"/delete/");
+            
+            for(; i < tds.length; i++) {
+                info += $(tds[i]).text()+" ";
+            }
+            assetDelDiv.find(".motion").text(info);
+        }
+    });
+    
+    !function(){
+        var $button = $("a#find_mac");
+        var $mac_input = $("div#ipform").find("input#mac");
+        var $ipaddr_input = $("div#ipform").find("input#addr_str");
+
+        function beforeSend(xhr) {
+            $mac_input.val("");
+            $button.text("查找中...");
+            $button.addClass('disabled');
+            $button.unbind('click', find_mac);
+        }
+        
+        function success(msg) {
+            var res = msg.split("'");
+            res[0] == '{mac:' && $mac_input.val(res[1]);
+            res[0] == '{err:' && alert(res[1]);
+        }
+        
+        function error(xhr, status, error) {
+            alert(error);
+        }
+        
+        function complete() {
+            $button.text("自动查找MAC");
+            $button.removeClass('disabled');
+            $button.bind('click', find_mac);
+        }
+        
+        function find_mac() {
+            $.ajax({
+                type: "GET",
+			    url: "/find_mac/"+$ipaddr_input.val()+"/",
+                beforeSend: beforeSend,
+			    success: success,
+                error: error,
+			    timeout: 15000,
+			    dataType: "text",
+                complete: complete
+            });
+        }
+
+        $button.bind('click', find_mac);
+    }()
+});
 </script>
 {% endblock %}
 
@@ -51,7 +122,7 @@
 
         <!-- table list -->
         <div class="uk-overflow-container">
-            <table class="uk-table uk-text-nowrap uk-table-hover uk-table-striped">
+            <table id="ipList" class="uk-table uk-text-nowrap uk-table-hover uk-table-striped">
                 <thead>
                     <tr style="background-image:linear-gradient(to bottom,#fff,#eee);">
                         <th class="">IP地址</th>
@@ -66,18 +137,18 @@
                 </thead>
                 <tbody>
                 {% for IP, net_name, employee in IPs %}
-                    <tr class="uk-visible-hover-inline" id="{% if IP.employee_name %}used{% endif %}" data-employee-name={{employee.name}}>
-                        <td id="addr" class="">{% if IP.addr_str %}{{ IP.addr_str|safe }}{% else %}{{ IP.addr_ntop }}{% endif %}</td>
-                        <td id="user" class="">{% if IP.employee_name %}{{ IP.employee_name|safe }}{% endif %}{%if employee.status==False %}&nbsp;(离职){%endif%}</td>
-                        <td id="mac" class="">{% if IP.mac %}{{ IP.mac|safe }}{% endif %}</td>
-                        <td id="device" class="">{% if IP.device %}{{ IP.device|safe }}{% endif %}</td>
-                        <td id="department" class="">{{ IP.net_name|safe }}</td>
+                    <tr class="uk-visible-hover-inline" id="{% if IP.employee_name %}used{% endif %}">
+                        <td id="addr_str" data-value="{% if IP.addr_str %}{{ IP.addr_str }}{% endif %}" class="column">{% if IP.addr_str %}{{ IP.addr_str|safe }}{% else %}{{ IP.addr_ntop }}{% endif %}</td>
+                        <td id="user" data-value="{% if IP.employee_name %}{{ IP.employee_name }}{% endif %}" class="column">{% if IP.employee_name %}{{ IP.employee_name|safe }}{% endif %}{%if employee.status==False %}&nbsp;(离职){%endif%}</td>
+                        <td id="mac" data-value="{% if IP.mac %}{{ IP.mac }}{% endif %}" class="column">{% if IP.mac %}{{ IP.mac|safe }}{% endif %}</td>
+                        <td id="device" data-value="{% if IP.device %}{{ IP.device }}{% endif %}" class="column">{% if IP.device %}{{ IP.device|safe }}{% endif %}</td>
+                        <td id="department" data-value="{% if IP.net_name %}{{ IP.net_name }}{% endif %}" class="">{{ IP.net_name|safe }}</td>
                         {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
-                        <td  class="">
+                        <td class="">
                             <!-- Operators -->
                             <div>
-                                {% if not IP.employee_name %}<a id="{{IP.addr}}" class="success" href="#usebox" data-uk-modal><i class="uk-icon-user-plus"></i></a>{% endif %}
-                                {% if IP.employee_name %}<a id="{{IP.id}}" class="modify" href="#modifybox" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>{% endif %}
+                                {% if not IP.employee_name %}<a id="{{IP.addr}}" class="success" href="#ipform" data-uk-modal><i class="uk-icon-user-plus"></i></a>{% endif %}
+                                {% if IP.employee_name %}<a id="{{IP.id}}" class="modify" href="#ipform" data-uk-modal><i class="uk-icon-pencil-square-o"></i></a>{% endif %}
                                 {% if IP.employee_name %}<a id="{{IP.id}}" class="danger" href="#deletebox" data-uk-modal><i class="uk-icon-user-times"></i></a>{% endif %}
                             </div>
                         </td>
@@ -129,21 +200,31 @@
 <!-- IP 操作 -->
 <form>
 </form>
-<form action="" id="ipAdd" class="uk-form uk-form-horizontal" method="POST">
+<form action="" class="uk-form uk-form-horizontal" method="POST">
     {{ form_ip.hidden_tag() }}
-    <div id="usebox" class="uk-modal">
+    <div id="ipform" class="uk-modal">
         <div class="uk-modal-dialog">
-            <div class="uk-modal-header uk-grid"><i class="uk-icon-user-plus uk-icon-medium" style="color:#8CC14C;"></i><h2>启用该IP地址</h2></div>
-            {{ form_ip.addr }}
-            {{ form_ip.net }}
+            <div class="uk-modal-header uk-grid"><i class="uk-icon-user-plus uk-icon-medium" style="color:#8CC14C;"></i><h2>启用IP地址</h2></div>
+            <div class="uk-form-row uk-hidden"><label class="uk-form-label">IP地址</label><div class="uk-form-controls">
+                {{ form_ip.addr }}
+            </div></div>
+            <div class="uk-form-row uk-hidden"><label class="uk-form-label">网络</label><div class="uk-form-controls">
+                {{ form_ip.net }}
+            </div></div>
+            <div class="uk-form-row"><label class="uk-form-label">IP地址</label><div class="uk-form-controls">
+                <input type="text" id="addr_str" disabled="true"></input>
+            </div></div>
             <div class="uk-form-row"><label class="uk-form-label">使用人</label><div class="uk-form-controls">
                 {{ form_ip.user }}
             </div></div>
             <div class="uk-form-row"><label class="uk-form-label">设备mac</label><div class="uk-form-controls">
-                {{ form_ip.mac }}
+                {{ form_ip.mac }} <a id="find_mac" href"#">自动查找MAC</a>
             </div></div>
             <div class="uk-form-row"><label class="uk-form-label">设备信息</label><div class="uk-form-controls">
                 {{ form_ip.device }}
+            </div></div>
+            <div class="uk-form-row"><label class="uk-form-label">同步到网关</label><div class="uk-form-controls">
+                <input name="sync" type="checkbox" checked />
             </div></div>
             <div class="uk-modal-footer uk-text-right">
                 <button class="uk-button uk-modal-close" type="button">取消</button>
@@ -152,34 +233,19 @@
         </div>
     </div>
 </form>
-<form action="" id="ipUpdate" class="uk-form uk-form-horizontal" method="POST">
-    {{ form_ip.hidden_tag() }}
-    <div id="modifybox" class="uk-modal">
-        <div class="uk-modal-dialog">
-            <div class="uk-modal-header uk-grid"><i class="uk-icon-pencil-square-o uk-icon-medium" style="color:#07d;"></i><h2>修改使用人</h2></div>
-            <div class="uk-form-row"><label class="uk-form-label">使用人</label><div class="uk-form-controls">
-                {{ form_ip.user }}
-            </div></div>
-            <div class="uk-form-row"><label class="uk-form-label">设备mac</label><div class="uk-form-controls">
-                {{ form_ip.mac }}
-            </div></div>
-            <div class="uk-form-row"><label class="uk-form-label">设备信息</label><div class="uk-form-controls">
-                {{ form_ip.device }}
-            </div></div>
-            <div class="uk-modal-footer uk-text-right">
-                <button class="uk-button uk-modal-close" type="button">取消</button>
-                <button class="uk-button uk-button-primary">确定</button>
-            </div>
-        </div>
-    </div>
-</form>
+
 <form action="" id="ipDelete" class="uk-form" method="POST">
     <div id="deletebox" class="uk-modal">
         <div class="uk-modal-dialog">
             <div class="uk-modal-header uk-grid"><i class="uk-icon-times-circle uk-icon-medium" style="color:#f00;"></i><h2>删除IP地址</h2></div>
             确定停用&nbsp;<span class="motion"></span>&nbsp;吗？
-            <input type="text" class="uk-hidden" name="ip_id" id="delete_ip_id">
-            <input type="text" class="uk-hidden" name="operate" value="delete">
+
+            <hr>
+
+            <div class="uk-form-row"><label class="uk-form-label">
+                同步到网关<input name="sync" type="checkbox" checked />
+            </div>
+
             <div class="uk-modal-footer uk-text-right">
                 <button class="uk-button uk-modal-close" type="button">取消</button>
                 <button class="uk-button uk-button-danger">确定</button>
