@@ -95,6 +95,18 @@ $('document').ready(function(){
         }
         x(struct, fragment);
         $("#departments #list").append(fragment);
+    }();
+    
+    //页面各项功能的JS实现
+    !function(){
+        //设置项
+        var preDisplayPage = 3;     //页码栏最多往前展示N页，其他用 "..." 代替
+        var nextDisplayPage = 5;    //页码栏最后往前展示N页，其他用 "..." 代替
+        
+        var currDep = null;     //当前部门
+        var currPage = null;    //当前页码
+        var currKeyWord = null; //当前关键字
+        var Count = null;       //保存总结果数，避免重复查找数据库
         
         //折叠\展开下级部门
         $("div#departments div#list i.dropdown").click(function(){
@@ -112,7 +124,7 @@ $('document').ready(function(){
         
         //添加部门编辑功能
         $("a.depAdd").click(function(){
-            $("form#formDepartmentAdd #parent").val(currDepId);
+            $("form#formDepartmentAdd #parent").val(currDep);
         });
         
         $("a.depDel").click(function(){
@@ -138,18 +150,6 @@ $('document').ready(function(){
                 this.children[2].classList.add("hidden");
             }
         });
-    }();
-    
-    //页面各项功能的JS实现
-    !function(){
-        //设置项
-        var preDisplayPage = 3;     //页码栏最多往前展示N页，其他用 "..." 代替
-        var nextDisplayPage = 5;    //页码栏最后往前展示N页，其他用 "..." 代替
-        
-        var currDep = null;     //当前部门
-        var currPage = null;    //当前页码
-        var currKeyWord = null; //当前关键字
-        var Count = null;       //保存总结果数，避免重复查找数据库
         
         //通过ajax获取员工信息列表
         var xhr = new XMLHttpRequest();
