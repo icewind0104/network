@@ -33,7 +33,7 @@ class Ip(RedirectForm):
     user = StringField('user', validators=[DataRequired()], render_kw={'autocomplete': 'off'})
     mac = StringField('mac', render_kw={'autocomplete': 'off'})
     device = TextAreaField('device', render_kw={'autocomplet': 'off', 'cols':'40', 'rows':'2'})
-    net = IntegerField('net')
+    net = StringField('net')
     sync = BooleanField('sync', default="sync")
 
 class Login(FlaskForm):

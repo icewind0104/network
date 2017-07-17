@@ -405,6 +405,7 @@ def ip_add():
                                     )
             if res['status'] == False:
                 flash('网关同步失败:'+res['error'])
+                return form.redirect()
 
         # 写入数据库
         ip = models.ips(
@@ -437,6 +438,7 @@ def ip_delete(ID):
             res = mylib.sync2gateway(addr=ip.addr_str, opt='del')
             if res['status'] == False:
                 flash('网关同步失败:'+res['error'])
+                return form.redirect()
 
         try:
             db.session.delete(ip)
@@ -470,6 +472,7 @@ def ip_update(ID):
             res = mylib.sync2gateway(addr=ip.addr_str, title=form.user.data, mac=ip.mac, opt='mod')
             if res['status'] == False:
                 flash('网关同步失败:'+res['error'])
+                return form.redirect()
         
         try:
             db.session.commit()
