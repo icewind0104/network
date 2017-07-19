@@ -2,8 +2,12 @@
 
 {% block head %}
 <script type="text/javascript">
+    'use strict'
     $('document').ready(function(){
-        args = function() {
+        var search_key = {% if search %}"{{ search }}"{% else %}null{% endif %};
+    
+        // 将URL参数转换成JS对象结构
+        var args = function() {
             var qs = (location.search.length > 0 ? location.search.substring(1) : "");
             var args = {};
             var items = qs.length ? qs.split("&") : [];
@@ -20,6 +24,7 @@
             return args;
         }();
 
+        // JS 实现未使用资产筛选
         $("input#filter_used").click(function(){
             if (this.checked == true) {
                 args["unused"] = "true";
@@ -36,6 +41,15 @@
             }
             location.href = search;
         });
+        
+        // 高亮显示结果中包含的搜索关键字
+        !function(){
+            if(search_key != null) {
+                $("table#assetList td.canBeSearch").each(function(){
+                    $(this).html($(this).text().replace(/{{search}}/g, '<span class="search">{{search}}</span>'));
+                });
+            }
+        }();
 
         // 资产数据添加
         $("A#assetAdd").click(function(e){
@@ -158,23 +172,23 @@
                     {% for asset in assets %}
                     <tr class="uk-visible-hover-inline">
                         {% if catagory == 'display' %}
-                        <td id="vendor" data-value="{% if asset.vendor %}{{ asset.vendor }}{% endif %}" class="column">{% if asset.vendor %}{{ asset.vendor|safe }}{% endif %}</td>
-                        <td id="model" data-value="{% if asset.model %}{{ asset.model }}{% endif %}" class="column">{% if asset.model %}{{ asset.model|safe }}{% endif %}</td>
-                        <td id="serial" data-value="{% if asset.serial %}{{ asset.serial }}{% endif %}" class="column">{% if asset.serial %}{{ asset.serial|safe }}{% endif %}</td>
+                        <td id="vendor" data-value="{% if asset.vendor %}{{ asset.vendor }}{% endif %}" class="column canBeSearch">{% if asset.vendor %}{{ asset.vendor|safe }}{% endif %}</td>
+                        <td id="model" data-value="{% if asset.model %}{{ asset.model }}{% endif %}" class="column canBeSearch">{% if asset.model %}{{ asset.model|safe }}{% endif %}</td>
+                        <td id="serial" data-value="{% if asset.serial %}{{ asset.serial }}{% endif %}" class="column canBeSearch">{% if asset.serial %}{{ asset.serial|safe }}{% endif %}</td>
                         {% elif catagory == 'host' %}
-                        <td id="cpu" data-value="{% if asset.cpu %}{{ asset.cpu }}{% endif %}" class="column">{% if asset.cpu %}{{ asset.cpu|safe }}{% endif %}</td>
-                        <td id="memory" data-value="{% if asset.memory %}{{ asset.memory }}{% endif %}" class="column">{% if asset.memory %}{{ asset.memory|safe }}{% endif %}</td>
-                        <td id="motherboard" data-value="{% if asset.motherboard %}{{ asset.motherboard }}{% endif %}" class="column">{% if asset.motherboard %}{{ asset.motherboard|safe }}{% endif %}</td>
-                        <td id="graphics" data-value="{% if asset.graphics %}{{ asset.graphics }}{% endif %}" class="column">{% if asset.graphics %}{{ asset.graphics|safe }}{% endif %}</td>
+                        <td id="cpu" data-value="{% if asset.cpu %}{{ asset.cpu }}{% endif %}" class="column canBeSearch">{% if asset.cpu %}{{ asset.cpu|safe }}{% endif %}</td>
+                        <td id="memory" data-value="{% if asset.memory %}{{ asset.memory }}{% endif %}" class="column canBeSearch">{% if asset.memory %}{{ asset.memory|safe }}{% endif %}</td>
+                        <td id="motherboard" data-value="{% if asset.motherboard %}{{ asset.motherboard }}{% endif %}" class="column canBeSearch">{% if asset.motherboard %}{{ asset.motherboard|safe }}{% endif %}</td>
+                        <td id="graphics" data-value="{% if asset.graphics %}{{ asset.graphics }}{% endif %}" class="column canBeSearch">{% if asset.graphics %}{{ asset.graphics|safe }}{% endif %}</td>
                         {% elif catagory == 'laptop' %}
-                        <td id="vendor" data-value="{% if asset.vendor %}{{ asset.vendor }}{% endif %}" class="column">{% if asset.vendor %}{{ asset.vendor|safe }}{% endif %}</td>
-                        <td id="model" data-value="{% if asset.model %}{{ asset.model }}{% endif %}" class="column">{% if asset.model %}{{ asset.model|safe }}{% endif %}</td>
-                        <td id="serial" data-value="{% if asset.serial %}{{ asset.serial }}{% endif %}" class="column">{% if asset.serial %}{{ asset.serial|safe }}{% endif %}</td>
+                        <td id="vendor" data-value="{% if asset.vendor %}{{ asset.vendor }}{% endif %}" class="column canBeSearch">{% if asset.vendor %}{{ asset.vendor|safe }}{% endif %}</td>
+                        <td id="model" data-value="{% if asset.model %}{{ asset.model }}{% endif %}" class="column canBeSearch">{% if asset.model %}{{ asset.model|safe }}{% endif %}</td>
+                        <td id="serial" data-value="{% if asset.serial %}{{ asset.serial }}{% endif %}" class="column canBeSearch">{% if asset.serial %}{{ asset.serial|safe }}{% endif %}</td>
                         {% endif %}
-                        <td id="employee_id" data-value="{% if asset.employee_name %}{{ asset.employee_name }}{% endif %}" class="column">{% if asset.employee_name %}{{ asset.employee_name|safe }}{% endif %}{% if asset.employee_status == False %}&nbsp;(离职){% endif %}</td>
-                        <td id="note" data-value="{% if asset.note %}{{ asset.note }}{% endif %}" class="column">{% if asset.note %}{{ asset.note|safe }}{% endif %}</td>
+                        <td id="employee_id" data-value="{% if asset.employee_name %}{{ asset.employee_name }}{% endif %}" class="column canBeSearch">{% if asset.employee_name %}{{ asset.employee_name|safe }}{% endif %}{% if asset.employee_status == False %}&nbsp;(离职){% endif %}</td>
+                        <td id="note" data-value="{% if asset.note %}{{ asset.note }}{% endif %}" class="column canBeSearch">{% if asset.note %}{{ asset.note|safe }}{% endif %}</td>
                         <td id="create_time" data-value="{% if asset.create_time_str %}{{ asset.create_time_str }}{% endif %}" class="">{% if asset.create_time_str %}{{ asset.create_time_str|safe }}{% endif %}</td>
-                        <td id="asset_sn" data-value="{% if asset.asset_sn %}{{ asset.asset_sn }}{% endif %}" class="">{% if asset.asset_sn %}{{ asset.asset_sn|safe }}{% endif %}</td>
+                        <td id="asset_sn" data-value="{% if asset.asset_sn %}{{ asset.asset_sn }}{% endif %}" class="canBeSearch">{% if asset.asset_sn %}{{ asset.asset_sn|safe }}{% endif %}</td>
                         {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
                         <td  class="">
                             <!-- Operators -->

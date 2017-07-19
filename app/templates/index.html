@@ -2,7 +2,10 @@
 
 {% block head %}
 <script type="text/javascript">
+'use strict'
 $('document').ready(function(){
+    var search_key = {% if search %}"{{ search }}"{% else %}null{% endif %};
+
     // IP地址数据添加
     $("table#ipList").click(function(e){
         var $a = $(e.target).closest("A");
@@ -55,6 +58,16 @@ $('document').ready(function(){
         }
     });
     
+    // 高亮显示结果中包含的搜索关键字
+    !function(){
+        if(search_key != null) {
+            $("table#ipList td.canBeSearch").each(function(){
+                $(this).html($(this).text().replace(/{{search}}/g, '<span class="search">{{search}}</span>'));
+            });
+        }
+    }();
+    
+    // MAC地址查找
     !function(){
         var $button = $("a#find_mac");
         var $mac_input = $("div#ipform").find("input#mac");
@@ -136,13 +149,13 @@ $('document').ready(function(){
                     </tr>
                 </thead>
                 <tbody>
-                {% for IP, net_name, employee in IPs %}
+                {% for IP in IPs %}
                     <tr class="uk-visible-hover-inline" id="{% if IP.employee_name %}used{% endif %}">
-                        <td id="addr_str" data-value="{% if IP.addr_str %}{{ IP.addr_str }}{% endif %}" class="column">{% if IP.addr_str %}{{ IP.addr_str|safe }}{% else %}{{ IP.addr_ntop }}{% endif %}</td>
-                        <td id="user" data-value="{% if IP.employee_name %}{{ IP.employee_name }}{% endif %}" class="column">{% if IP.employee_name %}{{ IP.employee_name|safe }}{% endif %}{%if employee.status==False %}&nbsp;(离职){%endif%}</td>
-                        <td id="mac" data-value="{% if IP.mac %}{{ IP.mac }}{% endif %}" class="column">{% if IP.mac %}{{ IP.mac|safe }}{% endif %}</td>
-                        <td id="device" data-value="{% if IP.device %}{{ IP.device }}{% endif %}" class="column">{% if IP.device %}{{ IP.device|safe }}{% endif %}</td>
-                        <td id="department" data-value="{% if IP.net_name %}{{ IP.net_name }}{% endif %}" class="">{{ IP.net_name|safe }}</td>
+                        <td id="addr_str" data-value="{% if IP.addr_str %}{{ IP.addr_str }}{% endif %}" class="column canBeSearch">{% if IP.addr_str %}{{ IP.addr_str|safe }}{% else %}{{ IP.addr_ntop }}{% endif %}</td>
+                        <td id="user" data-value="{% if IP.employee_name %}{{ IP.employee_name }}{% endif %}" class="column canBeSearch">{% if IP.employee_name %}{{ IP.employee_name|safe }}{% endif %}{%if IP.employee_status==False %}&nbsp;(离职){%endif%}</td>
+                        <td id="mac" data-value="{% if IP.mac %}{{ IP.mac }}{% endif %}" class="column canBeSearch">{% if IP.mac %}{{ IP.mac|safe }}{% endif %}</td>
+                        <td id="device" data-value="{% if IP.device %}{{ IP.device }}{% endif %}" class="column canBeSearch">{% if IP.device %}{{ IP.device|safe }}{% endif %}</td>
+                        <td id="department" data-value="{% if IP.net_name %}{{ IP.net_name }}{% endif %}" class="canBeSearch">{{ IP.net_name|safe }}</td>
                         {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
                         <td class="">
                             <!-- Operators -->
