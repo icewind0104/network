@@ -108,15 +108,16 @@ def index():
                 # 该IP未被使用
                 if one_res is None or each != one_res[0].addr:
                     ip = models.ips(addr=each)
-                    ip.net_name = curr_net.name
-                    IPs.append((ip, None, None, None))
+                    IPs.append((ip, curr_net.name, None, None))
                 # 该IP已被使用
                 else:
-                    one_res[0].net_name = curr_net.name
-                    one_res[0].employee_name = one_res[2]
-                    one_res[0].employee_status = one_res[3]
                     IPs.append(one_res)
                     one_res = res.pop(0)
+    
+    for each in IPs:
+        each[0].net_name = each[1]
+        each[0].employee_name = each[2]
+        each[0].employee_status = each[3]
                     
     Ips = [x[0] for x in IPs]
 

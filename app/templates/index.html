@@ -45,7 +45,7 @@ $('document').ready(function(){
         var $a = $(e.target).closest("A");
         if ($a.hasClass("danger")) {
             var i = 0,
-                info = "";
+                info = "",
                 tds = $a.closest("TR").children("td.column"),
                 assetDelDiv = $($a.attr("href"));
 
