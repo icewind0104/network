@@ -113,9 +113,9 @@
         <li class="uk-nav-divider"></li>
         {% endif %}
 
-        <li class="{% if catagory == 'display' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/display/">显示器</a></li>
-        <li class="{% if catagory == 'host' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/host/">台式主机</a></li>
-        <li class="{% if catagory == 'laptop' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/laptop/">笔记本电脑</a></li>
+        <li class="{% if catagory == 'display' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/display/{% if search %}?search={{search}}{% endif %}">显示器</a></li>
+        <li class="{% if catagory == 'host' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/host/{% if search %}?search={{search}}{% endif %}">台式主机</a></li>
+        <li class="{% if catagory == 'laptop' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/laptop/{% if search %}?search={{search}}{% endif %}">笔记本电脑</a></li>
         <li class="uk-nav-divider"></li>
         <li><input id="filter_used" type="checkbox" {% if session['unused'] == True %}checked{% endif %}/>只显示未使用资产</li>
     </ul>

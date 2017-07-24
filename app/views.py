@@ -63,6 +63,9 @@ def find_mac(ipaddr):
 def index():
     net_id = request.args.get('net', None)
     search = request.args.get('search', None)
+    # 忽略 search 为空字符串
+    if search == "":
+        search = None
 
     form = Net()
     form_ip = Ip()
@@ -84,7 +87,7 @@ def index():
             models.ips.addr_str.contains(search)
         )).all()
     
-    # 按照网段呈现IP，呈现包括未使用的IP    
+    # 按照网段呈现IP，呈现包括未使用的IP
     if net_id is not None:
         net_id = int(net_id)
         curr_net = models.nets.query.get(net_id)
@@ -135,10 +138,14 @@ def asset(catagory):
     
     # 设置分类以及当前分类下的关键字搜索
     search = request.form['search'] if request.method == 'POST' else request.args.get('search', None)
+    # 忽略 search 为空字符串
+    if search == "":
+        search = None
+        
     if catagory == 'host':
         form = Host()
         query = db.session.query(models.hosts, models.employees.name, models.employees.status).outerjoin(models.employees)
-        if search is not None and search != '':
+        if search is not None:
             query = query.filter(or_(
                 models.employees.name.contains(search),
                 models.hosts.cpu.contains(search),
@@ -151,7 +158,7 @@ def asset(catagory):
     if catagory == 'display':
         form = Display()
         query = db.session.query(models.displays, models.employees.name, models.employees.status).outerjoin(models.employees)
-        if search is not None and search != '':
+        if search is not None:
             query = query.filter(or_(
                 models.employees.name.contains(search),
                 models.displays.vendor.contains(search),
@@ -162,7 +169,7 @@ def asset(catagory):
     if catagory == 'laptop':
         form = Laptop()
         query = db.session.query(models.laptops, models.employees.name, models.employees.status).outerjoin(models.employees)
-        if search is not None and search != '':
+        if search is not None:
             query = query.filter(or_(
                 models.employees.name.contains(search),
                 models.laptops.vendor.contains(search),
