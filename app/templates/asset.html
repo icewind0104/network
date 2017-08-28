@@ -59,7 +59,7 @@
                 header = assetDiv.find("div.uk-modal-header");
                 
             add_count.removeClass("none");
-            assetDiv.parent().attr("action", "{{prefix}}/{{catagory}}s/add/");
+            assetDiv.parent().attr("action", "{{ config.MOUNT_POINT }}/{{catagory}}s/add/");
             assetDiv.find("input").val("");
             header.html("<i class='uk-icon-plus-square uk-icon-medium' style='color:#8CC14C;'></i><h2>添加资产</h2>");
         });
@@ -75,7 +75,7 @@
                     header = assetDiv.find("div.uk-modal-header");
                 
                 add_count.addClass("none");
-                assetDiv.parent().attr("action", "{{prefix}}/{{catagory}}s/"+$a.attr("id")+"/update/");
+                assetDiv.parent().attr("action", "{{ config.MOUNT_POINT }}/{{catagory}}s/"+$a.attr("id")+"/update/");
                 header.html("<i class='uk-icon-pencil-square-o uk-icon-medium' style='color:#07d;'></i><h2>修改资产</h2>");
                 
                 for(; i < tds.length; i++) {
@@ -92,7 +92,7 @@
                     tds = $a.closest("TR").children("td.column"),
                     assetDelDiv = $($a.attr("href"));
 
-                assetDelDiv.parent().attr("action", "{{prefix}}/{{catagory}}s/"+$a.attr("id")+"/delete/");
+                assetDelDiv.parent().attr("action", "{{ config.MOUNT_POINT }}/{{catagory}}s/"+$a.attr("id")+"/delete/");
                 
                 for(; i < tds.length; i++) {
                     info += $(tds[i]).text()+" ";
@@ -113,9 +113,9 @@
         <li class="uk-nav-divider"></li>
         {% endif %}
 
-        <li class="{% if catagory == 'display' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/display/{% if search %}?search={{search}}{% endif %}">显示器</a></li>
-        <li class="{% if catagory == 'host' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/host/{% if search %}?search={{search}}{% endif %}">台式主机</a></li>
-        <li class="{% if catagory == 'laptop' %}uk-active{% endif %}"><a  href="{{prefix}}/asset/laptop/{% if search %}?search={{search}}{% endif %}">笔记本电脑</a></li>
+        <li class="{% if catagory == 'display' %}uk-active{% endif %}"><a  href="{{ config.MOUNT_POINT }}/asset/display/{% if search %}?search={{search}}{% endif %}">显示器 ({{Count.displays}})</a></li>
+        <li class="{% if catagory == 'host' %}uk-active{% endif %}"><a  href="{{ config.MOUNT_POINT }}/asset/host/{% if search %}?search={{search}}{% endif %}">台式主机 ({{Count.hosts}})</a></li>
+        <li class="{% if catagory == 'laptop' %}uk-active{% endif %}"><a  href="{{ config.MOUNT_POINT }}/asset/laptop/{% if search %}?search={{search}}{% endif %}">笔记本电脑 ({{Count.laptops}})</a></li>
         <li class="uk-nav-divider"></li>
         <li><input id="filter_used" type="checkbox" {% if session['unused'] == True %}checked{% endif %}/>只显示未使用资产</li>
     </ul>

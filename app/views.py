@@ -8,8 +8,6 @@ from urllib import request as request2, parse
 from flask_login import login_required, login_user, logout_user, current_user
 import re, urllib, wtforms, json, time, gzip, urllib
 
-prefix = app.config['MOUNT_POINT']
-
 # --------- User Manage [START] ----------
 
 @lm.user_loader
@@ -34,7 +32,7 @@ def login():
             login_user(user, remember=is_remember)
             next = request.args.get('next')
             return redirect(next or url_for('index'))
-    return render_template('login.html', form=form, prefix=prefix)
+    return render_template('login.html', form=form)
 
 @app.route('/logout/')
 def logout():
@@ -42,6 +40,16 @@ def logout():
     return redirect(url_for('index'))
 
 # --------- User Manage [ END ] ----------
+
+#--------------------------------------------
+#   check_name
+#--------------------------------------------
+@app.route('/check_name/<string:name>/')
+def check_name(name):
+    if models.employees.query.filter_by(name=parse.unquote(name)).count() == 1:
+        return 'OK'
+    else:
+        return 'FAILED'
 
 #--------------------------------------------
 #   find_mac
@@ -125,7 +133,7 @@ def index():
     Ips = [x[0] for x in IPs]
 
     # 渲染
-    return render_template('index.html', navi='ip', form=form, form_ip=form_ip, nets=Nets, currNetId=net_id, IPs=Ips, prefix=prefix, search=search)
+    return render_template('index.html', navi='ip', form=form, form_ip=form_ip, nets=Nets, currNetId=net_id, IPs=Ips, search=search)
 
 #--------------------------------------------
 #   Asset - /asset/
@@ -205,8 +213,14 @@ def asset(catagory):
             asset.create_time_str = time.strftime('%Y-%m-%d', time.localtime(asset.create_time))
 
     Assets = [x[0] for x in assets]
+    
+    # 计算分类资产总量
+    Count = {}
+    Count['displays'] = db.session.query(models.displays).count()
+    Count['hosts'] = db.session.query(models.hosts).count()
+    Count['laptops'] = db.session.query(models.laptops).count()
 
-    return render_template('asset.html', navi='asset', prefix=prefix, assets=Assets, form=form, catagory=catagory, Page=Page, search=search)
+    return render_template('asset.html', navi='asset', assets=Assets, form=form, catagory=catagory, Page=Page, search=search, Count=Count)
 
 #--------------------------------------------
 #   Employee - /employee/
@@ -255,7 +269,6 @@ def employee():
 
     return render_template('employee.html',
         navi        = 'employee',
-        prefix      = prefix,
         employees   = employees,
         form        = form,
         form_dep    = form_dep,
@@ -475,7 +488,7 @@ def ip_update(ID):
 def net():
     form = Net()
     nets = models.nets.query.order_by(models.nets.ipstart).all()
-    return render_template('net.html', navi='ip', form=form, nets=nets, prefix=prefix)
+    return render_template('net.html', navi='ip', form=form, nets=nets)
 
 @app.route('/nets/add/', methods=['GET', 'POST'])
 @login_required
