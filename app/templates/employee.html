@@ -10,13 +10,13 @@ $('document').ready(function(){
         if (t.length == 1){
             $("#modifybox #name").val(t.parent().parent().parent().find('td#name').text());
             $("#modifybox #department_id").val(parseInt(t[0].dataset.depid));
-            $("form#emplyUpdate").attr("action", "{{prefix}}/employees/"+t.attr('id')+"/update/");
+            $("form#emplyUpdate").attr("action", "{{ config.MOUNT_POINT }}/employees/"+t.attr('id')+"/update/");
         }
         //删除员工信息
         t = $(e.target).closest(".emplyDel");
         if (t.length == 1){
             $("#deletebox").find(".motion").text(t.parent().parent().parent().find("#name").text());
-            $("form#emplyDelete").attr("action", "{{prefix}}/employees/"+t.attr('id')+"/delete/");
+            $("form#emplyDelete").attr("action", "{{ config.MOUNT_POINT }}/employees/"+t.attr('id')+"/delete/");
         }
         //垃圾回收
         t = null;
@@ -70,7 +70,7 @@ $('document').ready(function(){
                 if (struct.children[i].id == currDepId){
                     li.classList.add("active");
                 }
-                li.innerHTML = "<a class='name' data-dep="+struct.children[i].id+" href={{prefix}}/employee/?dep="+struct.children[i].id+">"+struct.children[i].name+"</a>"+
+                li.innerHTML = "<a class='name' data-dep="+struct.children[i].id+" href={{ config.MOUNT_POINT }}/employee/?dep="+struct.children[i].id+">"+struct.children[i].name+"</a>"+
                     "<span class='operator hidden'><a class='modify depUpdate' id='"+struct.children[i].id+"' data-name="+struct.children[i].name+" href='#depUpdate' data-uk-modal><i class='uk-icon-pencil-square-o'></i></a>"+
                     "<a class='danger depDel' id='"+struct.children[i].id+"' data-name="+struct.children[i].name+" href='#depDelete' data-uk-modal><i class='uk-icon-times-circle'></i></a></span>";
                 container.appendChild(li);
@@ -128,12 +128,12 @@ $('document').ready(function(){
         });
         
         $("a.depDel").click(function(){
-            $("form#formDepartmentDelete").attr("action", "{{prefix}}/departments/"+$(this).attr('id')+"/delete/");
+            $("form#formDepartmentDelete").attr("action", "{{ config.MOUNT_POINT }}/departments/"+$(this).attr('id')+"/delete/");
             $("form#formDepartmentDelete .motion").text(this.dataset.name);
         });
     
         $("a.depUpdate").click(function(){
-            $("form#formDepartmentUpdate").attr("action", "{{prefix}}/departments/"+$(this).attr('id')+"/update/");
+            $("form#formDepartmentUpdate").attr("action", "{{ config.MOUNT_POINT }}/departments/"+$(this).attr('id')+"/update/");
             $("form#formDepartmentUpdate #name").val(this.dataset.name);
         });
         
@@ -152,8 +152,8 @@ $('document').ready(function(){
         });
         
         //通过ajax获取员工信息列表
-        var xhr = new XMLHttpRequest();
         function getEmployeeList(department, page, keyWord, args, recall){
+            var xhr = new XMLHttpRequest();
             xhr.abort();
             var url = "";
             
@@ -184,7 +184,7 @@ $('document').ready(function(){
                 url = "?" + url.substring(0, url.length-1)
             }
             
-            xhr.open("get", "{{prefix}}/employee/json/"+url, true);
+            xhr.open("get", "{{ config.MOUNT_POINT }}/employee/json/"+url, true);
             xhr.responseType = "json";
             xhr.timeout = 8000;
             xhr.onload = function(e){
@@ -198,6 +198,7 @@ $('document').ready(function(){
                 }
             };
             xhr.send(null);
+            xhr = null;
         }
         
         // 更新HTML页面员工列表信息
@@ -526,7 +527,7 @@ $('document').ready(function(){
     </div>
 </form>
 
-<form action="{{prefix}}/employees/add/" class="uk-form uk-form-horizontal" method="POST">
+<form action="{{ config.MOUNT_POINT }}/employees/add/" class="uk-form uk-form-horizontal" method="POST">
     {{ form.hidden_tag() }}
 
     <div id="netaddbox" class="uk-modal">
@@ -563,7 +564,7 @@ $('document').ready(function(){
     </div>
 </form>
 
-<form id="formDepartmentAdd" action="{{prefix}}/departments/add/" class="uk-form uk-form-horizontal" method="POST">
+<form id="formDepartmentAdd" action="{{ config.MOUNT_POINT }}/departments/add/" class="uk-form uk-form-horizontal" method="POST">
     {{ form_dep.hidden_tag() }}
     <div id="depAdd" class="uk-modal">
         <div class="uk-modal-dialog">

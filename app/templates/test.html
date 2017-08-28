@@ -10,7 +10,7 @@
 !function(){
     $.ajax({
 			   type: "GET",
-			   url: "{{prefix}}/find_mac/192.168.6.21/",
+			   url: "{{ config.MOUNT_POINT }}/find_mac/192.168.6.21/",
 			   success: function(msg){console.log(msg)},
 			   timeout: 120000,     
 			   error: function(){},

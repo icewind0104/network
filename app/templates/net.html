@@ -9,13 +9,13 @@
                 $("form#netModify #name").val($(this).parent().parent().parent().find('#name').text());
                 $("form#netModify #ipstart").val($(this).parent().parent().parent().find('#ipstart').text());
                 $("form#netModify #ipend").val($(this).parent().parent().parent().find('#ipend').text());
-                $("form#netModify").attr("action", "{{prefix}}/nets/"+$(this).attr('id')+"/update/");
+                $("form#netModify").attr("action", "{{ config.MOUNT_POINT }}/nets/"+$(this).attr('id')+"/update/");
             });
 
         $("a.netdelete").click(
             function(){
-                $("#netdeletebox").find(".motion").text($(this).parent().parent().parent().find("#name").text())
-		$("form#netDelete").attr("action", "{{prefix}}/nets/"+$(this).attr('id')+"/delete/");
+                $("#netdeletebox").find(".motion").text($(this).parent().parent().parent().find("#name").text());
+                $("form#netDelete").attr("action", "{{ config.MOUNT_POINT }}/nets/"+$(this).attr('id')+"/delete/");
             });
 
     });

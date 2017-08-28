@@ -7,7 +7,7 @@
     <!-- Settings -->
     {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
     <li>
-        <a href="{{prefix}}/net/"><i class="uk-icon-gear"></i>&nbsp设置</a>
+        <a href="{{ config.MOUNT_POINT }}/net/"><i class="uk-icon-gear"></i>&nbsp设置</a>
     </li>
     <li>
         <a href="#netaddbox" data-uk-modal><i class="uk-icon-plus-square"></i>&nbsp新增网段</a>
@@ -18,7 +18,7 @@
     <!-- Nets -->
     {% for i in nets %}
     <li class="{% if currNetId == i.id %}uk-active{% endif %}">
-        <a  href="{{prefix}}/?net={{ i.id }}">{{ i.name }}</a>
+        <a  href="{{ config.MOUNT_POINT }}/?net={{ i.id }}">{{ i.name }}</a>
     </li>
     {% endfor %}
 </ul>
@@ -31,7 +31,7 @@
 <!-- block windows -->
 {% block windows %}
 {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
-<form action="{{prefix}}/nets/add/" class="uk-form uk-form-horizontal" method="POST">
+<form action="{{ config.MOUNT_POINT }}/nets/add/" class="uk-form uk-form-horizontal" method="POST">
     {{ form.hidden_tag() }}
 
     <div id="netaddbox" class="uk-modal">

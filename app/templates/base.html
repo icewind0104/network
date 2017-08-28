@@ -52,19 +52,19 @@
                         <dl class="uk-description-list-line">
                             {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
                             <dd id="netdesc">Hi!&nbsp;{{ current_user.username }}
-                                <span class="uk-margin-left">|</span><a href="{{prefix}}/logout/" class="uk-margin-left">登出</a>
+                                <span class="uk-margin-left">|</span><a href="{{ config.MOUNT_POINT }}/logout/" class="uk-margin-left">登出</a>
                             </dd>
                             {% else %}
-                            <dd><a href="{{prefix}}/login">管理员登录</a></dd>
+                            <dd><a href="{{ config.MOUNT_POINT }}/login">管理员登录</a></dd>
                             {% endif %}
                         </dl>
                     </div>
 
                     <!-- navigator -->
                     <ul class="uk-tab">
-                        <li class="{% if navi=='employee' %}uk-active{% endif %}"><a href="{{prefix}}/employee/">员工</a></li>
-                        <li class="{% if navi=='ip' %}uk-active{% endif %}"><a href="{{prefix}}/">IP</a></li>
-                        <li class="{% if navi=='asset' %}uk-active{% endif %}"><a href="{{prefix}}/asset/display/">资产</a></li>
+                        <li class="{% if navi=='employee' %}uk-active{% endif %}"><a href="{{ config.MOUNT_POINT }}/employee/">员工</a></li>
+                        <li class="{% if navi=='ip' %}uk-active{% endif %}"><a href="{{ config.MOUNT_POINT }}/">IP</a></li>
+                        <li class="{% if navi=='asset' %}uk-active{% endif %}"><a href="{{ config.MOUNT_POINT }}/asset/display/">资产</a></li>
                     </ul>
 
                     {% block left %}<!-- block left -->{% endblock %}
