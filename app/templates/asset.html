@@ -188,7 +188,7 @@
                         <td id="employee_id" data-value="{% if asset.employee_name %}{{ asset.employee_name }}{% endif %}" class="column canBeSearch">{% if asset.employee_name %}{{ asset.employee_name|safe }}{% endif %}{% if asset.employee_status == False %}&nbsp;(离职){% endif %}</td>
                         <td id="note" data-value="{% if asset.note %}{{ asset.note }}{% endif %}" class="column canBeSearch">{% if asset.note %}{{ asset.note|safe }}{% endif %}</td>
                         <td id="create_time" data-value="{% if asset.create_time_str %}{{ asset.create_time_str }}{% endif %}" class="">{% if asset.create_time_str %}{{ asset.create_time_str|safe }}{% endif %}</td>
-                        <td id="asset_sn" data-value="{% if asset.asset_sn %}{{ asset.asset_sn }}{% endif %}" class="canBeSearch">{% if asset.asset_sn %}{{ asset.asset_sn|safe }}{% endif %}</td>
+                        <td id="asset_sn" data-value="{% if asset.asset_sn %}{{ asset.asset_sn }}{% endif %}" class="column canBeSearch">{% if asset.asset_sn %}{{ asset.asset_sn|safe }}{% endif %}</td>
                         {% if current_user.is_authenticated and current_user.catagory == 'administrator' %}
                         <td  class="">
                             <!-- Operators -->

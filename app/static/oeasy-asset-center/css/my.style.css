@@ -140,3 +140,13 @@ a.disabled{
     cursor: default;
     text-decoration: none;
 }
+
+i.motion{
+    color: #e92e4b;
+    padding: 0 5px 0 5px;
+}
+
+i.correct{
+    color: #8CC14C;
+    padding: 0 5px 0 5px;
+}
