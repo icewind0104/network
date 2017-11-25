@@ -172,7 +172,8 @@ def asset(catagory):
                 models.displays.vendor.contains(search),
                 models.displays.model.contains(search),
                 models.displays.serial.contains(search),
-                models.displays.note.contains(search)
+                models.displays.note.contains(search),
+                models.displays.asset_sn.contains(search)
             ))
     if catagory == 'laptop':
         form = Laptop()
@@ -184,6 +185,7 @@ def asset(catagory):
                 models.laptops.model.contains(search),
                 models.laptops.serial.contains(search),
                 models.laptops.note.contains(search),
+                models.hosts.asset_sn.contains(search)
             ))
 
     # 过滤未使用的资产
